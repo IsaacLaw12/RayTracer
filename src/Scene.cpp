@@ -78,6 +78,7 @@ void Scene::edit_camera(std::string driver_line){
     }else if(!driver_line.compare(0, res.size(), res)){
         d_line >> d1 >> d2;
         scene_camera.set_resolution(d1, d2);
+        destination_image = Image(d1, d2);
     }
 }
 
