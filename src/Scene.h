@@ -15,6 +15,7 @@ class Scene {
         Scene(std::string driver_file);
         void render_image(std::string save_image_file);
   private:
+        // Methods to help load the scene
         void load_scene();
         bool valid_driver_line(std::string driver_line);
         void process_line(std::string driver_line);
@@ -23,9 +24,12 @@ class Scene {
         void add_model(std::string driver_line);
         void add_light(std::string driver_line);
 
+        // Methods to render image
+        void rayTrace();
+
         std::string orig_driver_file = "";
         Camera scene_camera;
-        Image destination_image = Image(0,0);
+        Image destination_image = Image(0, 0);
         std::vector<Model> scene_models;
         std::vector<Light> scene_lights;
         double ambient_red;

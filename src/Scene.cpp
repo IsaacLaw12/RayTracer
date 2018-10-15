@@ -8,6 +8,12 @@
 Scene::Scene(std::string driver_file){
     orig_driver_file = driver_file;
     load_scene();
+    // 42
+}
+
+void Scene::render_image(std::string save_image_file){
+    ray_trace();
+    destination_image.save_image(save_image_file);
 }
 
 void Scene::load_scene(){
@@ -29,6 +35,7 @@ void Scene::load_scene(){
             edit_camera(driver_line);
         }
     }
+    scene_camera.calculate_axis();
     in.close();
 }
 
@@ -42,10 +49,6 @@ bool Scene::valid_driver_line(std::string driver_line){
         is_valid = false;
     }
     return is_valid;
-}
-
-void Scene::render_image(std::string save_image_file){
-    std::cout << "Saving image to " << save_image_file << std::endl;
 }
 
 void Scene::edit_camera(std::string driver_line){
@@ -106,4 +109,25 @@ void Scene::add_model(std::string driver_line){
 
 void Scene::add_light(std::string driver_line){
     std::cout << "Adding light with " << driver_line << "\n";
+}
+
+void Scene::ray_trace(){
+    for (int i=0; i<2;i++){//scene_camera.pixel_width; i++){
+        for (int j=0; j<2;j++){//scene_camera.pixel_height; j++){
+            Eigen::Vector3d ray_pt = scene_camera.get_pixel_position(i, j);
+            ray_dir = ray_pt - scene_camera.get_eye();
+            ray_dir = ray_dir.normalized();
+        }
+    }
+    std::cout << "starting ray tracing" << "\n";
+}
+
+double Scene::find_intersection(Eigen::Vector3d ray_pt, Eigen::Vectored ray_dir){
+
+    for (Model model : scene_models){
+        Eigen::MatrixXi model_faces = model.get_faces();
+        for (int i=0; i<model_faces.cols(); i++){
+
+        }
+    }
 }

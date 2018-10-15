@@ -19,14 +19,24 @@ void Model::load_model(){
     std::string obj_line;
     std::string line_type = "";
     double vx, vy, vz;
+    int f1, f2, f3;
+    std::string s1, s2, s3;
     while (std::getline(in, obj_line)){
-        std::stringstream vertice_read(obj_line);
-        vertice_read >> line_type;
+        std::stringstream obj_read(obj_line);
+        obj_read >> line_type;
         if (line_type[0] == 'v' && line_type.size() == 1){
-            vertice_read >> vx >> vy >> vz;
-            add_vertice(vx, vy, vz);
+            obj_read >> vx >> vy >> vz;
+            add_vertex(vx, vy, vz);
+        }
+        if (line_type[0] == 'f'){
+            obj_read >> f1 >> s1;
+            obj_read >> f2 >> s2 ;
+            obj_read >> f3 >> s3 ;
+            add_face(f1, f2, f3);
         }
     }
+
+   calculate_face_normals();
 
     if (Vertices.cols() == 0){
         // No vertices were found
@@ -35,10 +45,44 @@ void Model::load_model(){
     in.close();
 }
 
-void Model::add_vertice(double vx, double vy, double vz){
+void Model::add_vertex(double vx, double vy, double vz){
     int num_cols = Vertices.cols();
     Vertices.conservativeResize(4, num_cols+1);
     Vertices.col(num_cols) << vx, vy, vz, 1;
+}
+
+void Model::add_face(int v1, int v2, int v3){
+    int num_cols = Faces.cols();
+    Faces.conservativeResize(3, num_cols+1);
+    Faces.col(num_cols) << v1, v2, v3;
+}
+
+void Model::add_face_normal(Eigen::Vector3d face_normal){
+    int num_cols = FaceNormals.cols();
+    FaceNormals.conservativeResize(3, num_cols+1);
+    FaceNormals.col(num_cols) << face_normal;
+}
+
+void Model::calculate_face_normals(){
+    FaceNormals = Eigen::MatrixXd();
+    int num_cols = Faces.cols();
+    Eigen::Vector3d first_vertex, second_vertex, third_vertex;
+    Eigen::Vector3d first_vector, second_vector;
+    for (int i=0; i<num_cols; i++){
+        first_vertex << get_vertex( Faces(0, i) - 1 );
+        second_vertex << get_vertex( Faces(1, i) - 1 );
+        third_vertex << get_vertex( Faces(2, i) - 1 );
+        // Calculate normal in counter clockwise direction?
+        first_vector = first_vertex - third_vertex;
+        second_vector = first_vertex - second_vertex;
+
+        add_face_normal(first_vector.cross(second_vector).normalized());
+    }
+}
+
+Eigen::Vector3d Model::get_vertex(int index){
+    Eigen::Vector3d vertex = Eigen::Vector3d(Vertices(0, index), Vertices(1, index), Vertices(2, index));
+    return vertex;
 }
 
 Eigen::MatrixXd Model::get_vertices(){
@@ -96,6 +140,6 @@ bool Model::model_loaded(){
     return load_successful;
 }
 
-class Face {
-
-};
+Eigen::MatrixXi Model:get_faces(){
+    return Faces;
+}

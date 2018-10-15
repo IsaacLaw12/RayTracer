@@ -1,4 +1,4 @@
-SRCDIR = := ./src
+SRCDIR := ./src
 FILES = $(shell find $(SRCDIR) -name "*.cpp")
 ERR_FLAGS = -Wall
 EXE_NAME = raytracer

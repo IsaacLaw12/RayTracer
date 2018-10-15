@@ -40,3 +40,22 @@ void Camera::set_resolution(int width, int height){
     pixel_height = height;
     std::cout << "Camera res is now " << width << "by" << height << "\n";
 }
+
+void Camera::calculate_axis(){
+    z_axis = eye - look;
+    z_axis = z_axis.normalized();
+    x_axis = up_dir.cross(z_axis).normalized();
+    y_axis = z_axis.cross(x_axis).normalized();
+
+}
+
+Eigen::Vector3d Camera::get_pixel_position(int x_pixel, int y_pixel){
+    double px = x_pixel / ( (pixel_width-1) * (view_plane_x2 - view_plane_x1)) + view_plane_x1;
+    double py = y_pixel / ( (pixel_height-1) * (view_plane_y2 - view_plane_y1)) + view_plane_y1;
+    Eigen::Vector3d pixpt = eye + (-1 * focal_length * z_axis) + (px * x_axis) + (py * y_axis);
+    return pixpt;
+}
+
+Eigen::Vector3d Camera::get_eye(){
+    return eye;
+}
