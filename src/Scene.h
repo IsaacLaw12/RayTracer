@@ -7,6 +7,7 @@
 #include "Model.h"
 #include "Transformation.h"
 #include "Camera.h"
+#include "Image.h"
 #include "Light.h"
 
 class Scene {
@@ -24,6 +25,7 @@ class Scene {
 
         std::string orig_driver_file = "";
         Camera scene_camera;
+        Image destination_image = Image(0,0);
         std::vector<Model> scene_models;
         std::vector<Light> scene_lights;
         double ambient_red;
