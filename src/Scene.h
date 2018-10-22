@@ -10,6 +10,7 @@
 #include "Image.h"
 #include "Light.h"
 
+
 class Scene {
   public:
         Scene(std::string driver_file);
@@ -25,15 +26,15 @@ class Scene {
         void add_light(std::string driver_line);
 
         // Methods to render image
-        void rayTrace();
+        void ray_trace();
+        double find_intersection(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, Model &md, Eigen::Vector3d &hit_normal);
+        Eigen::Vector3d calculate_color(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, double t_value, Model &hit_model, Eigen::Vector3d &hit_normal);
 
         std::string orig_driver_file = "";
         Camera scene_camera;
         Image destination_image = Image(0, 0);
         std::vector<Model> scene_models;
         std::vector<Light> scene_lights;
-        double ambient_red;
-        double ambient_green;
-        double ambient_blue;
+        Eigen::Vector3d ambient;
 };
 #endif

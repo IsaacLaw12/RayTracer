@@ -2,6 +2,7 @@
 #define IMAGE_INCLUDED
 
 #include <iostream>
+#include <fstream>
 #include <string>
 #include "Model.h"
 
@@ -13,10 +14,12 @@
 class Image {
   public:
         Image(int width, int height);
-        //write_pixel(int index_x, int index_y, Eigen::Vector3d rgb);
+        void write_pixel(int index_x, int index_y, Eigen::Vector3d rgb);
         void save_image(std::string file_name);
 
   private:
+      int convert_255(double value);
+
       int image_width;
       int image_height;
       Eigen::MatrixXd red_pixels;
