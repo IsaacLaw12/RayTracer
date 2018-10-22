@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include <cmath>
 #include "Model.h"
 
 // Needs to link Eigen in the makefile with g++ -I/path/to/Eigen

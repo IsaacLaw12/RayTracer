@@ -17,6 +17,8 @@ class Camera {
         Eigen::Vector3d get_pixel_position(int x_pixel, int y_pixel);
         void calculate_axis();
 
+        int pixel_width;
+        int pixel_height;
         Eigen::Vector3d get_eye();
   private:
         Eigen::Vector3d eye = Eigen::Vector3d::Zero();
@@ -28,13 +30,10 @@ class Camera {
 
         double focal_length = 0;
 
-        int pixel_width = 256;
-        int pixel_height = 256;
-
-        double view_plane_x1;
-        double view_plane_y1;
-        double view_plane_x2;
-        double view_plane_y2;
+        double near_bounding_left;
+        double near_bounding_right;
+        double near_bounding_bottom;
+        double near_bounding_top;
 
 
 };
