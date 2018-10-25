@@ -5,13 +5,11 @@
 #include <iomanip>
 
 Model::Model(std::string object_file){
-    double min_val = std::numeric_limits<double>::lowest();
-    double max_val = std::numeric_limits<double>::max();
-    max_point << min_val, min_val, min_val;
-    min_point << max_val, max_val, max_val;
     original_file = object_file;
     load_model();
 }
+
+Model::Model(){}
 
 void Model::load_model(){
     std::ifstream in(original_file);
@@ -45,14 +43,19 @@ void Model::load_model(){
             load_material(file_name);
         }
     }
-    calculate_face_normals();
-    if (Vertices.cols() == 0){
-        // No vertices were found
-        load_successful = false;
-    }
     in.close();
+    on_model_load();
 }
-Model::Model(){}
+
+void Model::on_model_load(){
+    calculate_face_normals();
+    int recursion_depth = 2;
+    BoundingBox bb = BoundingBox(Vertices, Faces, recursion_depth);
+    std::cout << "max_corner\n" << bb.get_max_corner() << "\nmin_corner \n" << bb.get_min_corner() << "\n";
+    bounding_box = &bb;
+    std::cout << "NEWmax_corner\n" << bounding_box->get_max_corner() << "\nmin_corner \n" << bounding_box->get_min_corner() << "\n";
+}
+
 
 void Model::add_vertex(double vx, double vy, double vz){
     int num_cols = Vertices.cols();
@@ -89,43 +92,6 @@ void Model::calculate_face_normals(){
     }
 }
 
-void Model::calculate_bounding(){
-    for(int i=0; i<Vertices.cols(); i++){
-        Eigen::Vector3d vertex = get_vertex(i);
-        if (vertex(0) < min_point(0)){
-            min_point(0) = vertex(0);
-        }
-        if (vertex(1) < min_point(1)){
-            min_point(1) = vertex(1);
-        }
-        if (vertex(2) < min_point(2)){
-            min_point(2) = vertex(2);
-        }
-        if (vertex(0) > max_point(0)){
-            max_point(0) = vertex(0);
-        }
-        if (vertex(1) > max_point(1)){
-            max_point(1) = vertex(1);
-        }
-        if (vertex(2) > max_point(2)){
-            max_point(2) = vertex(2);
-        }
-    }
-    center = (max_point - min_point) * .5 + min_point;
-    radius = ((max_point - min_point) * .5).norm();
-}
-
-bool Model::intersects_bounding(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir){
-    double v = (center - ray_pt).dot(ray_dir);
-    double c = (center - ray_pt).norm();
-
-    if ((radius*radius) > (c*c - v*v)){
-        return true;
-    } else{
-        return false;
-    }
-}
-
 Eigen::Vector3d Model::get_vertex(int index){
     Eigen::Vector3d vertex = Eigen::Vector3d(Vertices(0, index), Vertices(1, index), Vertices(2, index));
     return vertex;
@@ -137,8 +103,8 @@ Eigen::MatrixXd Model::get_vertices(){
 
 void Model::save_vertices(Eigen::MatrixXd new_vs){
     Vertices = new_vs;
-    calculate_face_normals();
-    calculate_bounding();
+    on_model_load();
+    std::cout << "after_load\n" << bounding_box->get_max_corner() << "\nmin_corner \n" << bounding_box->get_min_corner() << "\n";
 }
 
 void Model::save_model(std::ostream &output){
@@ -194,16 +160,19 @@ Eigen::MatrixXi Model::get_faces(){
 
 double Model::intersect_ray(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, Eigen::Vector3d &hit_normal){
     double smallest_t = -1;
-    if (! intersects_bounding(ray_pt, ray_dir)){
-        return smallest_t;
-    }
+    //if (! intersects_bounding(ray_pt, ray_dir)){
+    //    return smallest_t;
+    //}
     Eigen::Vector3d a_vertex, b_vertex, c_vertex,  a_b, a_c, a_l, solution;
     Eigen::Matrix3d left_hand = Eigen::Matrix3d();
     double beta, gamma, t_value;
-    for (int i=0; i<Faces.cols(); i++){
-        a_vertex << get_vertex( Faces(0, i) - 1 );
-        b_vertex << get_vertex( Faces(1, i) - 1 );
-        c_vertex << get_vertex( Faces(2, i) - 1 );
+    std::cout << "intersect max_corner\n" << bounding_box->get_max_corner() << "\nmin_corner \n" << bounding_box->get_min_corner() << "\n";
+    std::vector<int> intersected_faces = bounding_box->intersected_faces(ray_pt, ray_dir);
+    for (unsigned int i=0; i<intersected_faces.size(); i++){
+        int face_num = intersected_faces[i];
+        a_vertex = get_vertex( Faces(0, face_num) - 1 );
+        b_vertex = get_vertex( Faces(1, face_num) - 1 );
+        c_vertex = get_vertex( Faces(2, face_num) - 1 );
 
         a_b = a_vertex - b_vertex;
         a_c = a_vertex - c_vertex;
@@ -228,7 +197,6 @@ double Model::intersect_ray(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, Eig
             }
         }
     }
-
     return smallest_t;
 }
 /*
@@ -274,9 +242,8 @@ Eigen::Matrix3d Model::get_ambient_color(){
 
 void Model::load_material(std::string material_file){
     std::ifstream in(material_file);
-    if (!in || material_file.size() > 0){
-
-        //std::cerr << "Could not open " << material_file << std::endl;
+    if (!in){
+        std::cerr << "Could not open " << material_file << std::endl;
         return;
     }
     std::string obj_line;
