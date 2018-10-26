@@ -99,8 +99,8 @@ void Scene::add_model(std::string driver_line){
     Transformation tf(driver_line);
     if (tf.transform_loaded()){
         tf.transform_object();
-        Model mod = tf.get_model();
-        scene_models.push_back(&mod);
+        Model* mod = tf.get_model();
+        scene_models.push_back(mod);
     } else{
         std::cout << "Unable to extract transformation and object from " << driver_line << "\n";
     }
@@ -128,7 +128,7 @@ void Scene::ray_trace(){
             ray_pt = scene_camera.get_pixel_position(i, j);
             ray_dir = (ray_pt - scene_camera.get_eye()).normalized();
             t_value = find_intersection(ray_pt, ray_dir, hit_model, hit_normal);
-            std::cout << "T_Value: " << t_value << "\n";
+            std::cout << "T-value: " << t_value << "\n";
             color = calculate_color(ray_pt, ray_dir, t_value, hit_model, hit_normal);
             destination_image.write_pixel(i, j, color);
         }

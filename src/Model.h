@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <cmath>
 class BoundingBox;
 #include "BoundingBox.h"
 
@@ -25,16 +26,18 @@ class Model {
         Eigen::Matrix3d get_diffuse_color();
         Eigen::Matrix3d get_ambient_color();
         double intersect_ray(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, Eigen::Vector3d &hit_normal);
+        bool test_intersection(Eigen::Vector3d &vertex_a, Eigen::Vector3d &vertex_b, Eigen::Vector3d &vertex_c, Eigen::Vector3d& ray_pt, Eigen::Vector3d& ray_dir, double& t_value);
+
   private:
         friend class BoundingBox;
         void load_model();
         void on_model_load();
         void load_material(std::string material_file);
-        
+
         void add_vertex(double vx,double vy,double vz);
         void add_face(int v1, int v2, int v3);
         void add_face_normal(Eigen::Vector3d face_normal);
-        
+
         void calculate_face_normals();
         void output_formatted_float(std::ostream &o, double number, int precision);
 

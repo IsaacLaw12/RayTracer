@@ -49,11 +49,8 @@ void Model::load_model(){
 
 void Model::on_model_load(){
     calculate_face_normals();
-    int recursion_depth = 2;
-    BoundingBox bb = BoundingBox(Vertices, Faces, recursion_depth);
-    std::cout << "max_corner\n" << bb.get_max_corner() << "\nmin_corner \n" << bb.get_min_corner() << "\n";
-    bounding_box = &bb;
-    std::cout << "NEWmax_corner\n" << bounding_box->get_max_corner() << "\nmin_corner \n" << bounding_box->get_min_corner() << "\n";
+    int recursion_depth = 5;
+    bounding_box = new BoundingBox(Vertices, Faces, recursion_depth);
 }
 
 
@@ -104,7 +101,6 @@ Eigen::MatrixXd Model::get_vertices(){
 void Model::save_vertices(Eigen::MatrixXd new_vs){
     Vertices = new_vs;
     on_model_load();
-    std::cout << "after_load\n" << bounding_box->get_max_corner() << "\nmin_corner \n" << bounding_box->get_min_corner() << "\n";
 }
 
 void Model::save_model(std::ostream &output){
@@ -138,8 +134,8 @@ void Model::save_model(std::ostream &output){
 void Model::output_formatted_float(std::ostream &o, double number, int precision){
     // Outputs doubles with "precision" worth of tens places after period
     std::string output_str = std::to_string(number);
-    unsigned int index_of_period = output_str.find('.');
-    if (index_of_period == std::string::npos){
+    int index_of_period = output_str.find('.');
+    if (index_of_period == -1){
         output_str += ".";
         index_of_period = output_str.find('.');
     }
@@ -160,20 +156,21 @@ Eigen::MatrixXi Model::get_faces(){
 
 double Model::intersect_ray(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, Eigen::Vector3d &hit_normal){
     double smallest_t = -1;
-    //if (! intersects_bounding(ray_pt, ray_dir)){
-    //    return smallest_t;
-    //}
+
     Eigen::Vector3d a_vertex, b_vertex, c_vertex,  a_b, a_c, a_l, solution;
     Eigen::Matrix3d left_hand = Eigen::Matrix3d();
     double beta, gamma, t_value;
-    std::cout << "intersect max_corner\n" << bounding_box->get_max_corner() << "\nmin_corner \n" << bounding_box->get_min_corner() << "\n";
-    std::vector<int> intersected_faces = bounding_box->intersected_faces(ray_pt, ray_dir);
-    for (unsigned int i=0; i<intersected_faces.size(); i++){
-        int face_num = intersected_faces[i];
+    bool found_intersection;
+    std::set<int> intersected_faces = bounding_box->intersected_faces(ray_pt, ray_dir);
+    //std::cout << "returned intersected faces: \n ";
+    //    for (auto i = intersected_faces.begin(); i != intersected_faces.end(); ++i)
+    //        std::cout << *i << ' ';
+    //std::cout << "\n";
+    for (auto face_num: intersected_faces){
         a_vertex = get_vertex( Faces(0, face_num) - 1 );
         b_vertex = get_vertex( Faces(1, face_num) - 1 );
         c_vertex = get_vertex( Faces(2, face_num) - 1 );
-
+/*
         a_b = a_vertex - b_vertex;
         a_c = a_vertex - c_vertex;
         a_l = a_vertex - ray_pt;
@@ -182,9 +179,9 @@ double Model::intersect_ray(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, Eig
                      a_b(1), a_c(1), ray_dir(1),
                      a_b(2), a_c(2), ray_dir(2);
         solution = left_hand.colPivHouseholderQr().solve(a_l);
+
         beta = solution[0];
         gamma = solution[1];
-
         t_value = solution[2];
 
         if (beta < 0 || gamma < 0){
@@ -193,44 +190,64 @@ double Model::intersect_ray(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, Eig
         if (beta+gamma <= 1){
             if ( (smallest_t == -1) || (t_value < smallest_t)){
                 smallest_t = t_value;
-                hit_normal << FaceNormals(0, i), FaceNormals(1, i), FaceNormals(2, i);
+                hit_normal << FaceNormals(0, face_num),
+                              FaceNormals(1, face_num),
+                              FaceNormals(2, face_num);
             }
         }
+        */
+        found_intersection = test_intersection(a_vertex, b_vertex, c_vertex, ray_pt, ray_dir, t_value);
+        if (found_intersection){
+            if ( (smallest_t == -1) || (t_value < smallest_t)){
+                smallest_t = t_value;
+                hit_normal << FaceNormals(0, face_num),
+                              FaceNormals(1, face_num),
+                              FaceNormals(2, face_num);
+            }
+        }
+
     }
     return smallest_t;
 }
-/*
-bool test_intersection(Eigen::Vector3d &vertex_a, Eigen::Vector3d &vertex_b, Eigen::Vector3d &vertex_c,){
+
+bool Model::test_intersection(Eigen::Vector3d &vertex_a, Eigen::Vector3d &vertex_b, Eigen::Vector3d &vertex_c, Eigen::Vector3d& ray_pt, Eigen::Vector3d& ray_dir, double& t_value){
     // Moller Trumbore Algorithm
     const double EPSILON = 0.0000001;
-    Eigen::Vector3d edge1, edge2, h, s, q;
-    double a,f,u,v;
-    edge1 = vertex_b - vertex_a;
-    edge2 = vertex_c - vertex_a;
-    h = rayVector.crossProduct(edge2);
-    a = edge1.dotProduct(h);
-    if (a > -EPSILON && a < EPSILON)
-        return false;    // This ray is parallel to this triangle.
-    f = 1.0/a;
-    s = rayOrigin - vertex_a;
-    u = f * (s.dotProduct(h));
+    Eigen::Vector3d edge_ba, edge_ca, pvec, qvec, origin_a;
+    double det, invDet, u,v;
+    edge_ba = vertex_b - vertex_a;
+    edge_ca = vertex_c - vertex_a;
+    pvec = ray_dir.cross(edge_ca);
+    det = edge_ba.dot(pvec);
+    if (abs(det) < EPSILON)
+        return false;    // This ray is parallel to this triangle or hitting a triangle back.
+    invDet = 1.0 / det;
+    // Check that u is in bounds
+    origin_a = ray_pt - vertex_a;
+    u = (origin_a.dot(pvec)) * invDet;
+    std::cout << "1\n";
     if (u < 0.0 || u > 1.0)
         return false;
-    q = s.crossProduct(edge1);
-    v = f * rayVector.dotProduct(q);
-    if (v < 0.0 || u + v > 1.0)
+    std::cout << "2\n";
+    qvec = origin_a.cross(edge_ba);
+    v = ray_dir.dot(qvec) * invDet;
+    if (v < 0.0 || (u + v) > 1.0)
         return false;
+    std::cout << "3\n";
     // At this stage we can compute t to find out where the intersection point is on the line.
-    double t = f * edge2.dotProduct(q);
-    if (t > EPSILON) // ray intersection
-    {
-        outIntersectionPoint = rayOrigin + rayVector * t;
+    double t = invDet * edge_ca.dot(qvec);
+    if (t > EPSILON){
+        std::cout << "4\n";
+        t_value = t;
         return true;
     }
-    else // This means that there is a line intersection but not a ray intersection.
+    else {
+        // This means that there is a line intersection but not a ray intersection.
+        std::cout << "WHAT\n";
         return false;
+    }
 
-}*/
+}
 
 Eigen::Matrix3d Model::get_diffuse_color(){
     return diffuse_color;

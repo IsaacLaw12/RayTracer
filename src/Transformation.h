@@ -18,13 +18,13 @@ class Transformation {
         void save_model(std::ostream &output);
         std::string get_model_file_name();
         bool transform_loaded();
-        Model get_model();
+        Model* get_model();
   private:
         void create_transform_matrix(double transform_string[]);
         void generate_transform_matrix();
 
         std::string model_file_name = "";
-        Model target_model = Model("");
+        Model* target_model;
         Eigen::Matrix4d normalize_z_rotate = Eigen::Matrix4d::Identity();
         Eigen::Matrix4d rotate_matrix = Eigen::Matrix4d::Identity();
         Eigen::Matrix4d scale_matrix = Eigen::Matrix4d::Identity();
