@@ -162,15 +162,17 @@ double Model::intersect_ray(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, Eig
     double beta, gamma, t_value;
     bool found_intersection;
     std::set<int> intersected_faces = bounding_box->intersected_faces(ray_pt, ray_dir);
-    //std::cout << "returned intersected faces: \n ";
-    //    for (auto i = intersected_faces.begin(); i != intersected_faces.end(); ++i)
-    //        std::cout << *i << ' ';
-    //std::cout << "\n";
-    for (auto face_num: intersected_faces){
+    std::cout << "returned intersected faces: \n ";
+        for (auto i = intersected_faces.begin(); i != intersected_faces.end(); ++i)
+            std::cout << *i << ' ';
+    std::cout << "\n";
+    //for (auto face_num: intersected_faces){
+    for (int i=0; i<Faces.cols(); i++){
+        int face_num = i;
         a_vertex = get_vertex( Faces(0, face_num) - 1 );
         b_vertex = get_vertex( Faces(1, face_num) - 1 );
         c_vertex = get_vertex( Faces(2, face_num) - 1 );
-/*
+
         a_b = a_vertex - b_vertex;
         a_c = a_vertex - c_vertex;
         a_l = a_vertex - ray_pt;
@@ -195,7 +197,7 @@ double Model::intersect_ray(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, Eig
                               FaceNormals(2, face_num);
             }
         }
-        */
+ /*       
         found_intersection = test_intersection(a_vertex, b_vertex, c_vertex, ray_pt, ray_dir, t_value);
         if (found_intersection){
             if ( (smallest_t == -1) || (t_value < smallest_t)){
@@ -205,7 +207,7 @@ double Model::intersect_ray(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, Eig
                               FaceNormals(2, face_num);
             }
         }
-
+*/
     }
     return smallest_t;
 }
@@ -218,9 +220,12 @@ bool Model::test_intersection(Eigen::Vector3d &vertex_a, Eigen::Vector3d &vertex
     edge_ba = vertex_b - vertex_a;
     edge_ca = vertex_c - vertex_a;
     pvec = ray_dir.cross(edge_ca);
-    det = edge_ba.dot(pvec);
-    if (abs(det) < EPSILON)
-        return false;    // This ray is parallel to this triangle or hitting a triangle back.
+    det = pvec.dot(edge_ba);
+    if (abs(det) < EPSILON){
+        // This ray is parallel to this triangle
+        //std::cout << "abs(det): " << abs(det) << "\n";
+        return false;    
+    }
     invDet = 1.0 / det;
     // Check that u is in bounds
     origin_a = ray_pt - vertex_a;
@@ -243,7 +248,6 @@ bool Model::test_intersection(Eigen::Vector3d &vertex_a, Eigen::Vector3d &vertex
     }
     else {
         // This means that there is a line intersection but not a ray intersection.
-        std::cout << "WHAT\n";
         return false;
     }
 
