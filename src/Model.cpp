@@ -197,7 +197,7 @@ double Model::intersect_ray(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, Eig
                               FaceNormals(2, face_num);
             }
         }
- /*       
+ /*
         found_intersection = test_intersection(a_vertex, b_vertex, c_vertex, ray_pt, ray_dir, t_value);
         if (found_intersection){
             if ( (smallest_t == -1) || (t_value < smallest_t)){
@@ -224,7 +224,7 @@ bool Model::test_intersection(Eigen::Vector3d &vertex_a, Eigen::Vector3d &vertex
     if (abs(det) < EPSILON){
         // This ray is parallel to this triangle
         //std::cout << "abs(det): " << abs(det) << "\n";
-        return false;    
+        return false;
     }
     invDet = 1.0 / det;
     // Check that u is in bounds
@@ -251,14 +251,6 @@ bool Model::test_intersection(Eigen::Vector3d &vertex_a, Eigen::Vector3d &vertex
         return false;
     }
 
-}
-
-Eigen::Matrix3d Model::get_diffuse_color(){
-    return diffuse_color;
-}
-
-Eigen::Matrix3d Model::get_ambient_color(){
-    return ambient_color;
 }
 
 void Model::load_material(std::string material_file){

@@ -12,7 +12,7 @@ class BoundingBox;
 #include <Core>
 
 
-class Model {
+class Model: public SceneObject {
   public:
         Model(std::string driver_file);
         Model();
@@ -23,9 +23,6 @@ class Model {
         void save_model(std::ostream &output);
         bool model_loaded();
 
-        Eigen::Matrix3d get_diffuse_color();
-        Eigen::Matrix3d get_ambient_color();
-        double intersect_ray(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, Eigen::Vector3d &hit_normal);
         bool test_intersection(Eigen::Vector3d &vertex_a, Eigen::Vector3d &vertex_b, Eigen::Vector3d &vertex_c, Eigen::Vector3d& ray_pt, Eigen::Vector3d& ray_dir, double& t_value);
 
   private:
@@ -45,8 +42,6 @@ class Model {
         Eigen::MatrixXd Vertices = Eigen::MatrixXd();
         Eigen::MatrixXi Faces = Eigen::MatrixXi();
         Eigen::MatrixXd FaceNormals = Eigen::MatrixXd();
-        Eigen::Matrix3d diffuse_color = Eigen::Matrix3d().Zero();
-        Eigen::Matrix3d ambient_color = Eigen::Matrix3d().Zero();
 
         std::string original_file;
         bool load_successful = true;

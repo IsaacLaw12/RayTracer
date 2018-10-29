@@ -129,8 +129,7 @@ void Scene::ray_trace(){
     double t_value;
     Eigen::Vector3d ray_pt, ray_dir, color, hit_normal;
     Model* hit_model = scene_models[0];
-    //for (int i=0; i<2;i++){
-    //    for (int j=0; j<2;j++){
+
     std::cout << "starting ray tracing" << "\n";
     for (int i=0; i<scene_camera.pixel_width; i++){
         if (! (i%64)){
@@ -140,12 +139,11 @@ void Scene::ray_trace(){
             ray_pt = scene_camera.get_pixel_position(i, j);
             ray_dir = (ray_pt - scene_camera.get_eye()).normalized();
             t_value = find_intersection(ray_pt, ray_dir, hit_model, hit_normal);
-            std::cout << "T-value: " << t_value << "\n";
+            //std::cout << "T-value: " << t_value << "\n";
             color = calculate_color(ray_pt, ray_dir, t_value, hit_model, hit_normal);
             destination_image.write_pixel(i, j, color);
         }
      }
-
      std::cout << "end of ray tracing \n";
 }
 
