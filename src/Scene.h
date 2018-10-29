@@ -9,6 +9,7 @@
 #include "Camera.h"
 #include "Image.h"
 #include "Light.h"
+#include "Sphere.h"
 
 
 class Scene {
@@ -34,6 +35,7 @@ class Scene {
         Camera scene_camera;
         Image destination_image = Image(0, 0);
         std::vector<Model*> scene_models;
+        std::vector<Sphere*> scene_spheres;
         std::vector<Light> scene_lights;
         Eigen::Vector3d ambient;
 };

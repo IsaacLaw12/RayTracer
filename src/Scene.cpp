@@ -23,12 +23,15 @@ void Scene::load_scene(){
     std::string light = "light";
     std::string model = "model";
     std::string ambient = "ambient";
+    std::string sphere = "sphere";
 
     while (std::getline(in, driver_line)){
         if (!driver_line.compare(0, light.size(), light))
             add_light(driver_line);
         else if(!driver_line.compare(0, model.size(), model))
             add_model(driver_line);
+        else if (!driver_line.compare(0, ambient.size(), sphere))
+            add_sphere(driver_line);
         else if (!driver_line.compare(0, ambient.size(), ambient))
             edit_ambient(driver_line);
         else if(valid_driver_line(driver_line)){
@@ -106,6 +109,15 @@ void Scene::add_model(std::string driver_line){
     }
 
     std::cout << "There are now " << scene_models.size() << " models\n";
+}
+
+void Scene::add_sphere(std::string driver_line){
+    Sphere sp(driver_line);
+    if (sp.load_successful()){
+        scene_spheres.push_back(*sp);
+    } else{
+        std::cout << "Unable to create sphere from: " << driver_line << "\n";
+    }
 }
 
 void Scene::add_light(std::string driver_line){
