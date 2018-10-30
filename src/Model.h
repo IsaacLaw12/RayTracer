@@ -6,6 +6,7 @@
 #include <cmath>
 class BoundingBox;
 #include "BoundingBox.h"
+#include "SceneObject.h"
 
 // Needs to link Eigen in the makefile with g++ -I/path/to/Eigen
 #include <Eigen>
@@ -23,6 +24,7 @@ class Model: public SceneObject {
         void save_model(std::ostream &output);
         bool model_loaded();
 
+        double intersect_ray(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, Eigen::Vector3d &hit_normal);
         bool test_intersection(Eigen::Vector3d &vertex_a, Eigen::Vector3d &vertex_b, Eigen::Vector3d &vertex_c, Eigen::Vector3d& ray_pt, Eigen::Vector3d& ray_dir, double& t_value);
 
   private:

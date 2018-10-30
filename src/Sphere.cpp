@@ -2,12 +2,15 @@
 #include <sstream>
 
 Sphere::Sphere(std::string driver_line){
+    std::cout << "HEELLOOOO " << driver_line << "\n";
     double x, y, z, rad, ka_red, ka_blue, ka_green, kd_red, kd_blue, kd_green,
         ks_red, ks_blue, ks_green, katt_red, katt_blue, katt_green;
 
+    std::string driver_type;
+
     std::stringstream read_sphere(driver_line);
-    read_sphere >> x, y, z, rad, ka_red, ka_blue, ka_green, kd_red, kd_blue, kd_green,
-        ks_red, ks_blue, ks_green, katt_red, katt_blue, katt_green;
+    read_sphere >> driver_type >> x >> y >> z >> rad >> ka_red >> ka_blue >> ka_green >> kd_red >> kd_blue >> kd_green >>
+        ks_red >> ks_blue >> ks_green>> katt_red>> katt_blue>> katt_green;
 
     sphere_center << x, y, z;
     radius = rad;
@@ -38,17 +41,18 @@ double Sphere::intersect_ray(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, Ei
     if (v < 0 || ((radius*radius) > (c*c - v*v))){
         return t_value;
     }
-
-    double dr = (ray_pt + (v * ray_dir) - center).norm();
+    double dr = (ray_pt + (v * ray_dir) - sphere_center).norm();
+    std::cout << "radius: " << radius << "\ndr: " << dr << "\n v: " << v << "\n c: " << c << "\n";
     double intersection_offset = sqrt( radius*radius - dr*dr);
     t_value = v - intersection_offset;
 
     Eigen::Vector3d intersection_point = ray_pt + ray_dir * t_value;
     hit_normal = (intersection_point - sphere_center).normalized();
+    std::cout << "Sphere t-value is: " << t_value << "\n";
     return t_value;
 }
 
-bool BoundingBox::ray_intersects(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir){
+bool Sphere::ray_intersects(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir){
     double v = (sphere_center - ray_pt).dot(ray_dir);
     double c = (sphere_center - ray_pt).norm();
     if ((radius*radius) > (c*c - v*v)){

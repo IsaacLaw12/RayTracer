@@ -1,3 +1,4 @@
+#include "SceneObject.h"
 
 double SceneObject::intersect_ray(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, Eigen::Vector3d &hit_normal){
     // Object specific function

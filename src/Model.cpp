@@ -161,11 +161,11 @@ double Model::intersect_ray(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, Eig
     Eigen::Matrix3d left_hand = Eigen::Matrix3d();
     double beta, gamma, t_value;
     bool found_intersection;
-    std::set<int> intersected_faces = bounding_box->intersected_faces(ray_pt, ray_dir);
-    std::cout << "returned intersected faces: \n ";
-        for (auto i = intersected_faces.begin(); i != intersected_faces.end(); ++i)
-            std::cout << *i << ' ';
-    std::cout << "\n";
+    //std::set<int> intersected_faces = bounding_box->intersected_faces(ray_pt, ray_dir);
+    //std::cout << "returned intersected faces: \n ";
+    //    for (auto i = intersected_faces.begin(); i != intersected_faces.end(); ++i)
+    //        std::cout << *i << ' ';
+    //std::cout << "\n";
     //for (auto face_num: intersected_faces){
     for (int i=0; i<Faces.cols(); i++){
         int face_num = i;

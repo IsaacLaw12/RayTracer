@@ -30,7 +30,7 @@ void Scene::load_scene(){
             add_light(driver_line);
         else if(!driver_line.compare(0, model.size(), model))
             add_model(driver_line);
-        else if (!driver_line.compare(0, ambient.size(), sphere))
+        else if (!driver_line.compare(0, sphere.size(), sphere))
             add_sphere(driver_line);
         else if (!driver_line.compare(0, ambient.size(), ambient))
             edit_ambient(driver_line);
@@ -102,22 +102,21 @@ void Scene::add_model(std::string driver_line){
     Transformation tf(driver_line);
     if (tf.transform_loaded()){
         tf.transform_object();
-        Model* mod = tf.get_model();
-        scene_models.push_back(mod);
+        SceneObject* mod = tf.get_model();
+        scene_objects.push_back(mod);
     } else{
         std::cout << "Unable to extract transformation and object from " << driver_line << "\n";
     }
-
-    std::cout << "There are now " << scene_models.size() << " models\n";
 }
 
 void Scene::add_sphere(std::string driver_line){
-    Sphere sp(driver_line);
-    if (sp.load_successful()){
-        scene_spheres.push_back(*sp);
-    } else{
-        std::cout << "Unable to create sphere from: " << driver_line << "\n";
-    }
+    SceneObject* sp = new Sphere(driver_line);
+    //if (sp.load_successful()){
+    scene_objects.push_back(sp);
+    std::cout << "There are now: " << scene_objects.size() << " scene objects\n";
+    //} else{
+    //    std::cout << "Unable to create sphere from: " << driver_line << "\n";
+    //}
 }
 
 void Scene::add_light(std::string driver_line){
@@ -128,7 +127,10 @@ void Scene::add_light(std::string driver_line){
 void Scene::ray_trace(){
     double t_value;
     Eigen::Vector3d ray_pt, ray_dir, color, hit_normal;
-    Model* hit_model = scene_models[0];
+    if (scene_objects.size() == 0){
+        return;
+    }
+    SceneObject* hit_obj = scene_objects[0];
 
     std::cout << "starting ray tracing" << "\n";
     for (int i=0; i<scene_camera.pixel_width; i++){
@@ -138,36 +140,36 @@ void Scene::ray_trace(){
         for (int j=0; j<scene_camera.pixel_height; j++){
             ray_pt = scene_camera.get_pixel_position(i, j);
             ray_dir = (ray_pt - scene_camera.get_eye()).normalized();
-            t_value = find_intersection(ray_pt, ray_dir, hit_model, hit_normal);
+            t_value = find_intersection(ray_pt, ray_dir, hit_obj, hit_normal);
             //std::cout << "T-value: " << t_value << "\n";
-            color = calculate_color(ray_pt, ray_dir, t_value, hit_model, hit_normal);
+            color = calculate_color(ray_pt, ray_dir, t_value, hit_obj, hit_normal);
             destination_image.write_pixel(i, j, color);
         }
      }
      std::cout << "end of ray tracing \n";
 }
 
-double Scene::find_intersection(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, Model* md, Eigen::Vector3d &hit_normal){
+double Scene::find_intersection(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, SceneObject* md, Eigen::Vector3d &hit_normal){
     double intersect_t = -1;
     Eigen::Vector3d hit_s_normal;
-    for (Model* model:scene_models){
-        double t_value = model->intersect_ray(ray_pt, ray_dir, hit_s_normal);
+    for (SceneObject* so:scene_objects){
+        double t_value = so->intersect_ray(ray_pt, ray_dir, hit_s_normal);
         if ( (intersect_t == -1) || (t_value < intersect_t)){
             intersect_t = t_value;
-            md = model;
+            md = so;
             hit_normal = hit_s_normal;
         }
     }
     return intersect_t;
 }
 
-Eigen::Vector3d Scene::calculate_color(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, double t_value, Model* hit_model, Eigen::Vector3d &hit_normal){
+Eigen::Vector3d Scene::calculate_color(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, double t_value, SceneObject* hit_obj, Eigen::Vector3d &hit_normal){
     Eigen::Vector3d vector_to_light, intersect_pos, dif_refl, color;
     if (t_value < 0){
         color << 0,0,0;
         return color;
     }
-    color = hit_model->get_ambient_color() * ambient;
+    color = hit_obj->get_ambient_color() * ambient;
     double light_concentration;
     intersect_pos = ray_pt + t_value * ray_dir;
     for(Light light:scene_lights){
@@ -177,7 +179,7 @@ Eigen::Vector3d Scene::calculate_color(Eigen::Vector3d ray_pt, Eigen::Vector3d r
         if (light_concentration < 0){
             light_concentration = (-1 * hit_normal).dot(vector_to_light);
         }
-        dif_refl =  hit_model->get_diffuse_color() * light.get_color() * light_concentration;
+        dif_refl =  hit_obj->get_diffuse_color() * light.get_color() * light_concentration;
         color += dif_refl;
 
         // Specular reflection

@@ -8,7 +8,7 @@
 
 class SceneObject {
     public:
-        double intersect_ray(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, Eigen::Vector3d &hit_normal);
+        virtual double intersect_ray(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, Eigen::Vector3d &hit_normal);
 
         Eigen::Matrix3d get_diffuse_color();
         Eigen::Matrix3d get_ambient_color();
@@ -19,5 +19,5 @@ class SceneObject {
         Eigen::Matrix3d diffuse_color = Eigen::Matrix3d().Zero();
         Eigen::Matrix3d specular_color = Eigen::Matrix3d().Zero();
         Eigen::Matrix3d attenuation_color = Eigen::Matrix3d().Zero();
-}
+};
 #endif
