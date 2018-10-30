@@ -30,8 +30,9 @@ class Scene {
 
         // Methods to render image
         void ray_trace();
-        double find_intersection(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, SceneObject* md, Eigen::Vector3d &hit_normal);
+        double find_intersection(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, SceneObject*& md, Eigen::Vector3d &hit_normal);
         Eigen::Vector3d calculate_color(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, double t_value, SceneObject* hit_model, Eigen::Vector3d &hit_normal);
+        bool lightReachesObject(Light& light, Eigen::Vector3d intersect_pos);
 
         std::string orig_driver_file = "";
         Camera scene_camera;
