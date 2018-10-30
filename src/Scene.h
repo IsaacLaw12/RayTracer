@@ -9,6 +9,9 @@
 #include "Camera.h"
 #include "Image.h"
 #include "Light.h"
+#include "Sphere.h"
+#include "SceneObject.h"
+
 
 class Scene {
   public:
@@ -22,18 +25,22 @@ class Scene {
         void edit_camera(std::string driver_line);
         void edit_ambient(std::string driver_line);
         void add_model(std::string driver_line);
+        void add_sphere(std::string driver_line);
         void add_light(std::string driver_line);
 
         // Methods to render image
-        void rayTrace();
+        void ray_trace();
+        double find_intersection(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, SceneObject*& md, Eigen::Vector3d &hit_normal);
+        Eigen::Vector3d calculate_color(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, double t_value, SceneObject* hit_model, Eigen::Vector3d &hit_normal);
+        bool lightReachesObject(Light& light, Eigen::Vector3d intersect_pos);
 
         std::string orig_driver_file = "";
         Camera scene_camera;
         Image destination_image = Image(0, 0);
-        std::vector<Model> scene_models;
+        std::vector<SceneObject*> scene_objects;
+        //std::vector<Model*> scene_models;
+        //std::vector<Sphere*> scene_spheres;
         std::vector<Light> scene_lights;
-        double ambient_red;
-        double ambient_green;
-        double ambient_blue;
+        Eigen::Vector3d ambient;
 };
 #endif

@@ -15,17 +15,15 @@ class Light {
   public:
         Light(std::string driver_line);
         bool light_valid();
+        Eigen::Vector3d get_pos();
+        Eigen::Vector3d get_color();
 
   private:
       void assign_values(double spec_nums[]);
 
-      double x_cord;
-      double y_cord;
-      double z_cord;
       double w_value;
-      double red_color;
-      double green_color;
-      double blue_color;
+      Eigen::Vector3d light_pos;
+      Eigen::Vector3d light_color;
 
       bool load_successful = true;
 };

@@ -23,11 +23,15 @@ void Scene::load_scene(){
     std::string light = "light";
     std::string model = "model";
     std::string ambient = "ambient";
+    std::string sphere = "sphere";
+
     while (std::getline(in, driver_line)){
         if (!driver_line.compare(0, light.size(), light))
             add_light(driver_line);
         else if(!driver_line.compare(0, model.size(), model))
             add_model(driver_line);
+        else if (!driver_line.compare(0, sphere.size(), sphere))
+            add_sphere(driver_line);
         else if (!driver_line.compare(0, ambient.size(), ambient))
             edit_ambient(driver_line);
         else if(valid_driver_line(driver_line)){
@@ -88,46 +92,116 @@ void Scene::edit_camera(std::string driver_line){
 void Scene::edit_ambient(std::string driver_line){
     std::stringstream ambient_read(driver_line);
     std::string line_type;
-    ambient_read >> line_type >> ambient_red >> ambient_green >> ambient_blue;
-    std::cout << "ambient red is " << ambient_red << "\n";
+    double red, green, blue;
+    ambient_read >> line_type >> red >> green >> blue;
+    ambient << red, green, blue;
+
 }
 
 void Scene::add_model(std::string driver_line){
     Transformation tf(driver_line);
     if (tf.transform_loaded()){
         tf.transform_object();
-        scene_models.push_back(tf.get_model());
+        SceneObject* mod = tf.get_model();
+        scene_objects.push_back(mod);
     } else{
         std::cout << "Unable to extract transformation and object from " << driver_line << "\n";
     }
+}
 
-
-
-    std::cout << "Adding model with " << driver_line << "\n";
-    std::cout << "There are now " << scene_models.size() << " models\n";
+void Scene::add_sphere(std::string driver_line){
+    SceneObject* sp = new Sphere(driver_line);
+    //if (sp.load_successful()){
+    scene_objects.push_back(sp);
+    std::cout << "There are now: " << scene_objects.size() << " scene objects\n";
+    //} else{
+    //    std::cout << "Unable to create sphere from: " << driver_line << "\n";
+    //}
 }
 
 void Scene::add_light(std::string driver_line){
-    std::cout << "Adding light with " << driver_line << "\n";
+    Light light(driver_line);
+    scene_lights.push_back(light);
 }
 
 void Scene::ray_trace(){
-    for (int i=0; i<2;i++){//scene_camera.pixel_width; i++){
-        for (int j=0; j<2;j++){//scene_camera.pixel_height; j++){
-            Eigen::Vector3d ray_pt = scene_camera.get_pixel_position(i, j);
-            ray_dir = ray_pt - scene_camera.get_eye();
-            ray_dir = ray_dir.normalized();
-        }
+    double t_value;
+    Eigen::Vector3d ray_pt, ray_dir, color, hit_normal;
+    if (scene_objects.size() == 0){
+        return;
     }
+    SceneObject* hit_obj = scene_objects[0];
+
     std::cout << "starting ray tracing" << "\n";
+    for (int i=0; i<scene_camera.pixel_width; i++){
+        if (! (i%64)){
+            std::cout << "Row: " << i << " / " << scene_camera.pixel_height << "\n";
+        }
+        for (int j=0; j<scene_camera.pixel_height; j++){
+            ray_pt = scene_camera.get_pixel_position(i, j);
+            ray_dir = (ray_pt - scene_camera.get_eye()).normalized();
+            t_value = find_intersection(ray_pt, ray_dir, hit_obj, hit_normal);
+            color = calculate_color(ray_pt, ray_dir, t_value, hit_obj, hit_normal);
+            destination_image.write_pixel(i, j, color);
+        }
+     }
+     std::cout << "end of ray tracing \n";
 }
 
-double Scene::find_intersection(Eigen::Vector3d ray_pt, Eigen::Vectored ray_dir){
-
-    for (Model model : scene_models){
-        Eigen::MatrixXi model_faces = model.get_faces();
-        for (int i=0; i<model_faces.cols(); i++){
-
+double Scene::find_intersection(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, SceneObject*& md, Eigen::Vector3d &hit_normal){
+    double epsilon = .0001;
+    double intersect_t = -1;
+    Eigen::Vector3d hit_s_normal;
+    for (auto so : scene_objects){
+        double t_value = so->intersect_ray(ray_pt, ray_dir, hit_s_normal);
+        if (t_value <= epsilon){
+            continue;
+        }
+        if ( (intersect_t == -1) || (t_value < intersect_t) ){
+            intersect_t = t_value;
+            md = so;
+            hit_normal = hit_s_normal;
         }
     }
+    return intersect_t;
+}
+
+Eigen::Vector3d Scene::calculate_color(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, double t_value, SceneObject* hit_obj, Eigen::Vector3d &hit_normal){
+    Eigen::Vector3d vector_to_light, intersect_pos, dif_refl, color;
+    if (t_value < 0){
+        color << 0,0,0;
+        return color;
+    }
+    color = hit_obj->get_ambient_color() * ambient;
+    double light_concentration;
+    intersect_pos = ray_pt + t_value * ray_dir;
+    for(Light light:scene_lights){
+        if (!lightReachesObject(light, intersect_pos)){
+            continue;
+        }
+        // Diffuse reflection
+        vector_to_light = (light.get_pos() - intersect_pos).normalized();
+        light_concentration = hit_normal.dot(vector_to_light);
+        if (light_concentration < 0){
+            light_concentration = (-1 * hit_normal).dot(vector_to_light);
+        }
+        dif_refl =  hit_obj->get_diffuse_color() * light.get_color() * light_concentration;
+        color += dif_refl;
+
+        // Specular reflection
+    }
+    return color;
+}
+
+bool Scene::lightReachesObject(Light& light, Eigen::Vector3d intersect_pos){
+    double distance_to_light = (light.get_pos() - intersect_pos).norm();
+    Eigen::Vector3d vector_to_light = (light.get_pos() - intersect_pos).normalized();
+    SceneObject* so;
+    Eigen::Vector3d hit_normal;
+    double t_value = find_intersection(intersect_pos, vector_to_light, so, hit_normal);
+    std::cout << "Distance to light: " << distance_to_light << "\n t_value: " << t_value << "\n";
+    if (t_value == -1 || (distance_to_light < t_value)){
+        return true;
+    }
+    return false;
 }

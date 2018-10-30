@@ -23,15 +23,25 @@ Light::Light(std::string driver_line){
 }
 
 void Light::assign_values(double spec_nums[]){
-    x_cord = spec_nums[0];
-    y_cord = spec_nums[1];
-    z_cord = spec_nums[2];
+    double x_cord = spec_nums[0];
+    double y_cord = spec_nums[1];
+    double z_cord = spec_nums[2];
     w_value = spec_nums[3];
-    red_color = spec_nums[4];
-    green_color = spec_nums[5];
-    blue_color = spec_nums[6];
+    double red_color = spec_nums[4];
+    double green_color = spec_nums[5];
+    double blue_color = spec_nums[6];
+    light_pos << x_cord, y_cord, z_cord;
+    light_color << red_color, green_color, blue_color;
 }
 
 bool Light::light_valid(){
     return load_successful;
+}
+
+Eigen::Vector3d Light::get_pos(){
+    return light_pos;
+}
+
+Eigen::Vector3d Light::get_color(){
+    return light_color;
 }

@@ -29,8 +29,8 @@ Transformation::Transformation(std::string driver_string){
     driver.clear();
     driver >> model_file_name;
 
-    target_model = Model(model_file_name);
-    if (!target_model.model_loaded()){
+    target_model = new Model(model_file_name);
+    if (!target_model->model_loaded()){
         std::cout << "MODEL NOT LOADED" << "\n";
         load_successful = false;
     }
@@ -94,12 +94,12 @@ void Transformation::generate_transform_matrix(){
 }
 
 void Transformation::transform_object(){
-    Eigen::MatrixXd temp = final_matrix * target_model.get_vertices();
-    target_model.save_vertices( temp );
+    Eigen::MatrixXd temp = final_matrix * target_model->get_vertices();
+    target_model->save_vertices( temp );
 }
 
 void Transformation::save_model(std::ostream &output){
-    target_model.save_model(output);
+    target_model->save_model(output);
 }
 
 std::string Transformation::get_model_file_name(){
@@ -110,6 +110,6 @@ bool Transformation::transform_loaded(){
     return load_successful;
 }
 
-Model Transformation::get_model(){
+Model* Transformation::get_model(){
     return target_model;
 }
