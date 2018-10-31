@@ -280,6 +280,11 @@ void Model::load_material(std::string material_file){
             diffuse_color(1, 1) = k2;
             diffuse_color(2, 2) = k3;
         }
+
+        if (line_type[0] == 'N' && line_type[1] == 's'){
+            obj_read >> phong;
+        }
+
     }
 
 }

@@ -168,12 +168,13 @@ double Scene::find_intersection(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir,
 
 Eigen::Vector3d Scene::calculate_color(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, double t_value, SceneObject* hit_obj, Eigen::Vector3d &hit_normal){
     Eigen::Vector3d vector_to_light, intersect_pos, dif_refl, color;
+    Eigen::Vector3d obj_intsct_vector, light_reflect_point;
     if (t_value < 0){
         color << 0,0,0;
         return color;
     }
     color = hit_obj->get_ambient_color() * ambient;
-    double light_concentration;
+    double light_concentration, proximity_reflection;
     intersect_pos = ray_pt + t_value * ray_dir;
     for(Light light:scene_lights){
         if (!lightReachesObject(light, intersect_pos)){
@@ -185,10 +186,20 @@ Eigen::Vector3d Scene::calculate_color(Eigen::Vector3d ray_pt, Eigen::Vector3d r
         if (light_concentration < 0){
             light_concentration = (-1 * hit_normal).dot(vector_to_light);
         }
+
         dif_refl =  hit_obj->get_diffuse_color() * light.get_color() * light_concentration;
         color += dif_refl;
-
         // Specular reflection
+
+        // The vector from the intersect point to the camera
+        obj_intsct_vector = (ray_pt - intersect_pos).normalized();
+        // The point opposite the light flipped on the normal
+        light_reflect_point = (2 * hit_normal.dot(vector_to_light) *  hit_normal) - vector_to_light;
+        proximity_reflection = obj_intsct_vector.dot(light_reflect_point);
+        if (proximity_reflection > 0.0){
+            color += hit_obj->get_specular_color() * light.get_color() * std::pow(proximity_reflection, hit_obj->get_phong());
+        }
+
     }
     return color;
 }
@@ -199,7 +210,6 @@ bool Scene::lightReachesObject(Light& light, Eigen::Vector3d intersect_pos){
     SceneObject* so;
     Eigen::Vector3d hit_normal;
     double t_value = find_intersection(intersect_pos, vector_to_light, so, hit_normal);
-    std::cout << "Distance to light: " << distance_to_light << "\n t_value: " << t_value << "\n";
     if (t_value == -1 || (distance_to_light < t_value)){
         return true;
     }

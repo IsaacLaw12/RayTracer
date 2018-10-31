@@ -1,8 +1,12 @@
 #include "SceneObject.h"
 
-double SceneObject::intersect_ray(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, Eigen::Vector3d &hit_normal){
+double SceneObject::intersect_ray(Eigen::Vector3d, Eigen::Vector3d, Eigen::Vector3d&){
     // Object specific function
     return -1;
+}
+
+double SceneObject::get_phong(){
+    return phong;
 }
 
 Eigen::Matrix3d SceneObject::get_diffuse_color(){
