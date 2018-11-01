@@ -4,6 +4,7 @@
 #include <sstream>
 #include <iomanip>
 
+
 Model::Model(std::string object_file){
     original_file = object_file;
     load_model();
@@ -24,6 +25,9 @@ void Model::load_model(){
     int f1, f2, f3;
     std::string s1, s2, s3;
     while (std::getline(in, obj_line)){
+        if(obj_line.empty()){
+            continue;
+        }
         std::stringstream obj_read(obj_line);
         obj_read >> line_type;
         if (line_type[0] == 'v' && line_type.size() == 1){
@@ -85,7 +89,7 @@ void Model::calculate_face_normals(){
         first_vector = first_vertex - third_vertex;
         second_vector = first_vertex - second_vertex;
 
-        add_face_normal(first_vector.cross(second_vector).normalized());
+        add_face_normal((-1*first_vector.cross(second_vector)).normalized());
     }
 }
 
@@ -155,10 +159,11 @@ Eigen::MatrixXi Model::get_faces(){
 }
 
 double Model::intersect_ray(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, Eigen::Vector3d &hit_normal){
-    double smallest_t = -1;
+    double smallest_t = MISSED_T_VALUE;
 
     Eigen::Vector3d a_vertex, b_vertex, c_vertex,  a_b, a_c, a_l, solution;
-    Eigen::Matrix3d left_hand = Eigen::Matrix3d();
+    Eigen::Matrix3d M = Eigen::Matrix3d();
+    Eigen::Matrix3d MMs1, MMs2, MMs3;
     double beta, gamma, t_value;
     //bool found_intersection;
     //std::set<int> intersected_faces = bounding_box->intersected_faces(ray_pt, ray_dir);
@@ -167,8 +172,7 @@ double Model::intersect_ray(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, Eig
     //        std::cout << *i << ' ';
     //std::cout << "\n";
     //for (auto face_num: intersected_faces){
-    for (int i=0; i<Faces.cols(); i++){
-        int face_num = i;
+    for (int face_num=0; face_num<Faces.cols(); face_num++){
         a_vertex = get_vertex( Faces(0, face_num) - 1 );
         b_vertex = get_vertex( Faces(1, face_num) - 1 );
         c_vertex = get_vertex( Faces(2, face_num) - 1 );
@@ -177,38 +181,38 @@ double Model::intersect_ray(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, Eig
         a_c = a_vertex - c_vertex;
         a_l = a_vertex - ray_pt;
 
-        left_hand << a_b(0), a_c(0), ray_dir(0),
-                     a_b(1), a_c(1), ray_dir(1),
-                     a_b(2), a_c(2), ray_dir(2);
-        solution = left_hand.colPivHouseholderQr().solve(a_l);
+        M << a_b(0), a_c(0), ray_dir(0),
+             a_b(1), a_c(1), ray_dir(1),
+             a_b(2), a_c(2), ray_dir(2);
+        MMs1 = Eigen::Matrix3d(M);
+        MMs2 = Eigen::Matrix3d(M);
+        MMs3 = Eigen::Matrix3d(M);
+        for (int i=0; i<3; i++){
+            MMs1(i,0) = a_l(i);
+            MMs2(i,1) = a_l(i);
+            MMs3(i,2) = a_l(i);
+        }
 
-        beta = solution[0];
-        gamma = solution[1];
-        t_value = solution[2];
-
+        beta = MMs1.determinant() / M.determinant();
+        gamma = MMs2.determinant() / M.determinant();
         if (beta < 0 || gamma < 0){
             continue;
         }
+
         if (beta+gamma <= 1){
-            if ( (smallest_t == -1) || (t_value < smallest_t)){
+            t_value = MMs3.determinant() / M.determinant();
+            if ((t_value < smallest_t) && (t_value > 0.00001)){
                 smallest_t = t_value;
                 hit_normal << FaceNormals(0, face_num),
                               FaceNormals(1, face_num),
                               FaceNormals(2, face_num);
+                if (hit_normal.dot(ray_dir) > 0)
+                    hit_normal = -1 * hit_normal;
             }
         }
- /*
-        found_intersection = test_intersection(a_vertex, b_vertex, c_vertex, ray_pt, ray_dir, t_value);
-        if (found_intersection){
-            if ( (smallest_t == -1) || (t_value < smallest_t)){
-                smallest_t = t_value;
-                hit_normal << FaceNormals(0, face_num),
-                              FaceNormals(1, face_num),
-                              FaceNormals(2, face_num);
-            }
-        }
-*/
+
     }
+
     return smallest_t;
 }
 

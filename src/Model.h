@@ -47,5 +47,6 @@ class Model: public SceneObject {
 
         std::string original_file;
         bool load_successful = true;
+        double MISSED_T_VALUE = 1000000000;
 };
 #endif

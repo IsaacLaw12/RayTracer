@@ -42,5 +42,7 @@ class Scene {
         //std::vector<Sphere*> scene_spheres;
         std::vector<Light> scene_lights;
         Eigen::Vector3d ambient;
+
+        double MISSED_T_VALUE = 1000000000;
 };
 #endif
