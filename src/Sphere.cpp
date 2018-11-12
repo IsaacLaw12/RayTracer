@@ -13,6 +13,8 @@ Sphere::Sphere(std::string driver_line){
 
     sphere_center << x, y, z;
     radius = rad;
+    // Just a constant used for spheres
+    phong = 16;
 
     ambient_color(0, 0) = ka_red;
     ambient_color(1, 1) = ka_blue;

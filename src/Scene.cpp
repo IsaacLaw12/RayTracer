@@ -149,15 +149,15 @@ void Scene::ray_trace(){
 }
 
 double Scene::find_intersection(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, SceneObject*& md, Eigen::Vector3d &hit_normal){
-    double epsilon = .0001;
-    double intersect_t = -1;
+    double epsilon = .0000000001;
+    double intersect_t = MISSED_T_VALUE;
     Eigen::Vector3d hit_s_normal;
     for (auto so : scene_objects){
         double t_value = so->intersect_ray(ray_pt, ray_dir, hit_s_normal);
         if (t_value <= epsilon){
             continue;
         }
-        if ( (intersect_t == -1) || (t_value < intersect_t) ){
+        if ((t_value < intersect_t) ){
             intersect_t = t_value;
             md = so;
             hit_normal = hit_s_normal;
@@ -168,12 +168,13 @@ double Scene::find_intersection(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir,
 
 Eigen::Vector3d Scene::calculate_color(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, double t_value, SceneObject* hit_obj, Eigen::Vector3d &hit_normal){
     Eigen::Vector3d vector_to_light, intersect_pos, dif_refl, color;
-    if (t_value < 0){
+    Eigen::Vector3d obj_intsct_vector, light_reflect_point;
+    if (t_value == MISSED_T_VALUE){
         color << 0,0,0;
         return color;
     }
     color = hit_obj->get_ambient_color() * ambient;
-    double light_concentration;
+    double light_concentration, proximity_reflection;
     intersect_pos = ray_pt + t_value * ray_dir;
     for(Light light:scene_lights){
         if (!lightReachesObject(light, intersect_pos)){
@@ -183,24 +184,38 @@ Eigen::Vector3d Scene::calculate_color(Eigen::Vector3d ray_pt, Eigen::Vector3d r
         vector_to_light = (light.get_pos() - intersect_pos).normalized();
         light_concentration = hit_normal.dot(vector_to_light);
         if (light_concentration < 0){
-            light_concentration = (-1 * hit_normal).dot(vector_to_light);
+            //std::cout << "light_con: " << light_concentration << "\n";
+            //if (light_concentration > -.3)
+                continue;
+            //light_concentration = (-1 * hit_normal).dot(vector_to_light);
         }
+
         dif_refl =  hit_obj->get_diffuse_color() * light.get_color() * light_concentration;
         color += dif_refl;
-
         // Specular reflection
+
+        // The vector from the intersect point to the camera
+        obj_intsct_vector = (ray_pt - intersect_pos).normalized();
+        // The point opposite the light flipped on the normal
+        light_reflect_point = (2 * hit_normal.dot(vector_to_light) *  hit_normal) - vector_to_light;
+        proximity_reflection = obj_intsct_vector.dot(light_reflect_point);
+        if (proximity_reflection > 0.0){
+            color += hit_obj->get_specular_color() * light.get_color() * std::pow(proximity_reflection, hit_obj->get_phong());
+        }
+
     }
     return color;
 }
 
 bool Scene::lightReachesObject(Light& light, Eigen::Vector3d intersect_pos){
+    SceneObject* unused_so;
+    Eigen::Vector3d unused_norm;
+
     double distance_to_light = (light.get_pos() - intersect_pos).norm();
     Eigen::Vector3d vector_to_light = (light.get_pos() - intersect_pos).normalized();
-    SceneObject* so;
-    Eigen::Vector3d hit_normal;
-    double t_value = find_intersection(intersect_pos, vector_to_light, so, hit_normal);
-    std::cout << "Distance to light: " << distance_to_light << "\n t_value: " << t_value << "\n";
-    if (t_value == -1 || (distance_to_light < t_value)){
+    //std::cout << "ip: \n" << intersect_pos << "\nvtl\n" << vector_to_light << "\n";
+    double t_value = find_intersection(intersect_pos, vector_to_light, unused_so, unused_norm);
+    if (t_value == MISSED_T_VALUE || (distance_to_light < t_value)){
         return true;
     }
     return false;

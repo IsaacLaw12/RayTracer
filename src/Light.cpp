@@ -31,6 +31,9 @@ void Light::assign_values(double spec_nums[]){
     double green_color = spec_nums[5];
     double blue_color = spec_nums[6];
     light_pos << x_cord, y_cord, z_cord;
+    if (w_value == 0){
+        light_pos = 1000000000 * light_pos;
+    }
     light_color << red_color, green_color, blue_color;
 }
 
