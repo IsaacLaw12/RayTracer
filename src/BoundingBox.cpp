@@ -12,8 +12,9 @@ BoundingBox::BoundingBox(Eigen::MatrixXd& verts, Eigen::MatrixXi& faces, int rec
     : Vertices(verts), Faces(faces)
 {
     // Constructor called directly by the Model object
-    recursion_limit = recursionLimit - 1;
+    recursion_limit = recursionLimit;
     find_corners();
+    center = (max_corner-min_corner) / 2 + min_corner;
     // The first box should surround the entire model, so all faces are passed.
     for(int i=0;i<Faces.cols();i++){
         parent_faces.insert(i);
@@ -29,6 +30,7 @@ BoundingBox::BoundingBox(BoundingBox* parent_bb, int recursionLimit, Eigen::Vect
     recursion_limit = recursionLimit - 1;
     min_corner = min;
     max_corner = max;
+    center = (max-min) / 2 + min;
     parent_faces = parent_bb->contained_faces;
     find_contained_faces();
     subdivide_box();
@@ -40,21 +42,64 @@ void BoundingBox::find_contained_faces(){
         point_a = get_vertex( Faces(0, face_num) - 1 );
         point_b = get_vertex( Faces(1, face_num) - 1 );
         point_c = get_vertex( Faces(2, face_num) - 1 );
-        if (point_contained(point_a) || point_contained(point_b) || point_contained(point_c)){
+        if (triangle_intersects(point_a, point_b, point_c)){
             contained_faces.insert(face_num);
         }
     }
 }
 
-bool BoundingBox::point_contained(Eigen::Vector3d point){
-    bool contained = false;
-    Eigen::Vector3d lower_bounds, upper_bounds;
-    lower_bounds = point - min_corner;
-    upper_bounds = max_corner - point;
-    if (lower_bounds.minCoeff() >= 0 && upper_bounds.minCoeff() >= 0){
-        contained = true;
+double BoundingBox::max(double a, double b, double c) {
+    return std::max(a,std::max(b, c));
+}
+
+double BoundingBox::min(double a, double b, double c) {
+    return std::min(a,std::min(b, c));
+}
+
+bool BoundingBox::axis_test(const Eigen::Vector3d& axis, const Eigen::Vector3d& e, const Eigen::Vector3d& v0, const Eigen::Vector3d& v1, const Eigen::Vector3d& v2, const Eigen::Vector3d& u0, const Eigen::Vector3d& u1, const Eigen::Vector3d& u2) {
+    double p0 = v0.dot(axis);
+    double p1 = v1.dot(axis);
+    double p2 = v2.dot(axis);
+    double r = e[0] * std::abs(u0.dot(axis)) +
+               e[1] * std::abs(u1.dot(axis)) +
+               e[2] * std::abs(u2.dot(axis));
+    if (std::max(-max(p0, p1, p2), min(p0, p1, p2)) > r) return false;
+    return true;
+}
+
+bool BoundingBox::triangle_intersects(Eigen::Vector3d& v0, Eigen::Vector3d& v1, Eigen::Vector3d& v2) {
+    Eigen::Vector3d dims = max_corner - min_corner;
+    Eigen::Vector3d boxHalfSize(dims[0], dims[1], dims[2]);
+    v0 = v0 - center;
+    v1 = v1 - center;
+    v2 = v2 - center;
+    Eigen::Vector3d e0 = v1 - v0;
+    Eigen::Vector3d e1 = v2 - v1;
+    Eigen::Vector3d e2 = v0 - v2;
+
+    Eigen::Vector3d u0 = Eigen::Vector3d(1.0, 0.0, 0.0);
+    Eigen::Vector3d u1 = Eigen::Vector3d(0.0, 1.0, 0.0);
+    Eigen::Vector3d u2 = Eigen::Vector3d(0.0, 0.0, 1.0);
+
+    Eigen::Vector3d edges[] = {e0, e1, e2};
+    Eigen::Vector3d axes[] = {u0, u1, u2};
+
+    Eigen::Vector3d axis;
+    for (auto edge:edges){
+        for (auto axis:axes){
+            axis = axis.cross(edge);
+            if (!axis_test(axis, boxHalfSize, v0, v1, v2, u0, u1, u2)) return false;
+        }
     }
-    return contained;
+
+    if (!axis_test(u0, boxHalfSize, v0, v1, v2, u0, u1, u2)) return false;
+    if (!axis_test(u1, boxHalfSize, v0, v1, v2, u0, u1, u2)) return false;
+    if (!axis_test(u2, boxHalfSize, v0, v1, v2, u0, u1, u2)) return false;
+
+    Eigen::Vector3d normal = e0.cross(e1);
+    if (!axis_test(normal, boxHalfSize, v0, v1, v2, u0, u1, u2)) return false;
+
+    return true;
 }
 
 Eigen::Vector3d BoundingBox::get_min_corner(){
@@ -76,7 +121,7 @@ void BoundingBox::subdivide_box(){
     Eigen::Vector3d cube_center = (max_corner - min_corner) * .5 + min_corner;
     Eigen::Vector3d temp_min;
     Eigen::Vector3d temp_max;
-    if (contained_faces.size()>0 && recursion_limit>0){
+    if (contained_faces.size()>10 && recursion_limit>0){
         double half_x = (max_corner(0) - min_corner(0)) / 2.0;
         double half_y = (max_corner(1) - min_corner(1)) / 2.0;
         double half_z = (max_corner(2) - min_corner(2)) / 2.0;
@@ -86,7 +131,7 @@ void BoundingBox::subdivide_box(){
                     transform << x*half_x, y*half_y, z*half_z;
                     temp_min = min_corner + transform;
                     temp_max = cube_center + transform;
-                    BoundingBox sub_bb = BoundingBox(this, recursion_limit, temp_min, temp_max);
+                    BoundingBox* sub_bb = new BoundingBox(this, recursion_limit, temp_min, temp_max);
                     contained_boxes.push_back(sub_bb);
                 }
             }
@@ -133,8 +178,8 @@ std::set<int> BoundingBox::intersected_faces(Eigen::Vector3d ray_pt, Eigen::Vect
         return intersected_faces;
     }
     if (contained_boxes.size() > 0){
-        for (auto &sub_bb: contained_boxes){
-            std::set<int> hit_faces = sub_bb.intersected_faces(ray_pt, ray_dir);
+        for (auto sub_bb: contained_boxes){
+            std::set<int> hit_faces = sub_bb->intersected_faces(ray_pt, ray_dir);
             intersected_faces.insert(hit_faces.begin(), hit_faces.end());
         }
     } else{
@@ -142,9 +187,8 @@ std::set<int> BoundingBox::intersected_faces(Eigen::Vector3d ray_pt, Eigen::Vect
     }
     return intersected_faces;
 }
-
+/*
 bool BoundingBox::ray_intersects(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir){
-    Eigen::Vector3d center = (max_corner - min_corner) * .5 + min_corner;
     double radius = (center - min_corner).norm();
     double v = (center - ray_pt).dot(ray_dir);
     double c = (center - ray_pt).norm();
@@ -153,4 +197,42 @@ bool BoundingBox::ray_intersects(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir
     } else{
         return false;
     }
+}
+*/
+bool BoundingBox::ray_intersects(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir)
+{
+    double tmin = (min_corner(0) - ray_pt(0)) / ray_dir(0);
+    double tmax = (max_corner(0) - ray_pt(0)) / ray_dir(0);
+
+    if (tmin > tmax) std::swap(tmin, tmax);
+
+    double tymin = (min_corner(1) - ray_pt(1)) / ray_dir(1);
+    double tymax = (max_corner(1) - ray_pt(1)) / ray_dir(1);
+
+    if (tymin > tymax) std::swap(tymin, tymax);
+
+    if ((tmin > tymax) || (tymin > tmax))
+        return false;
+
+    if (tymin > tmin)
+        tmin = tymin;
+
+    if (tymax < tmax)
+        tmax = tymax;
+
+    double tzmin = (min_corner(2) - ray_pt(2)) / ray_dir(2);
+    double tzmax = (max_corner(2) - ray_pt(2)) / ray_dir(2);
+
+    if (tzmin > tzmax) std::swap(tzmin, tzmax);
+
+    if ((tmin > tzmax) || (tzmin > tmax))
+        return false;
+
+    if (tzmin > tmin)
+        tmin = tzmin;
+
+    if (tzmax < tmax)
+        tmax = tzmax;
+
+    return true;
 }

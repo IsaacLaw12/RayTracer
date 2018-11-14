@@ -53,7 +53,7 @@ void Model::load_model(){
 
 void Model::on_model_load(){
     calculate_face_normals();
-    int recursion_depth = 5;
+    int recursion_depth = 20;
     bounding_box = new BoundingBox(Vertices, Faces, recursion_depth);
 }
 
@@ -165,14 +165,15 @@ double Model::intersect_ray(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, Eig
     Eigen::Matrix3d M = Eigen::Matrix3d();
     Eigen::Matrix3d MMs1, MMs2, MMs3;
     double beta, gamma, t_value;
-    //bool found_intersection;
-    //std::set<int> intersected_faces = bounding_box->intersected_faces(ray_pt, ray_dir);
+
+    std::set<int> intersected_faces = bounding_box->intersected_faces(ray_pt, ray_dir);
+    //std::cout << "Intersected_faces: "<<intersected_faces.size() << "\n";
     //std::cout << "returned intersected faces: \n ";
     //    for (auto i = intersected_faces.begin(); i != intersected_faces.end(); ++i)
     //        std::cout << *i << ' ';
     //std::cout << "\n";
-    //for (auto face_num: intersected_faces){
-    for (int face_num=0; face_num<Faces.cols(); face_num++){
+    for (auto face_num: intersected_faces){
+    //for (int face_num=0; face_num<Faces.cols(); face_num++){
         a_vertex = get_vertex( Faces(0, face_num) - 1 );
         b_vertex = get_vertex( Faces(1, face_num) - 1 );
         c_vertex = get_vertex( Faces(2, face_num) - 1 );
@@ -194,23 +195,23 @@ double Model::intersect_ray(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, Eig
         }
 
         beta = MMs1.determinant() / M.determinant();
+        if (beta < 0 || beta > 1){
+            continue;
+        }
         gamma = MMs2.determinant() / M.determinant();
-        if (beta < 0 || gamma < 0){
+        if (gamma < 0 || beta+gamma > 1){
             continue;
         }
 
-        if (beta+gamma <= 1){
-            t_value = MMs3.determinant() / M.determinant();
-            if ((t_value < smallest_t) && (t_value > 0.00001)){
-                smallest_t = t_value;
-                hit_normal << FaceNormals(0, face_num),
-                              FaceNormals(1, face_num),
-                              FaceNormals(2, face_num);
-                if (hit_normal.dot(ray_dir) > 0)
-                    hit_normal = -1 * hit_normal;
-            }
+        t_value = MMs3.determinant() / M.determinant();
+        if ((t_value < smallest_t) && (t_value > 0.00001)){
+            smallest_t = t_value;
+            hit_normal << FaceNormals(0, face_num),
+                          FaceNormals(1, face_num),
+                          FaceNormals(2, face_num);
+            if (hit_normal.dot(ray_dir) > 0)
+                hit_normal = -1 * hit_normal;
         }
-
     }
 
     return smallest_t;
