@@ -5,9 +5,13 @@
 #include <iomanip>
 
 
-Model::Model(std::string object_file){
+Model::Model(std::string object_file, std::string smoothin){
     original_file = object_file;
     load_model();
+    std::string smooth = "smooth";
+    if (!smoothin.compare(0, smooth.size(), smooth)){
+        smoothing = true;
+    }
 }
 
 Model::Model(){}
@@ -48,13 +52,28 @@ void Model::load_model(){
         }
     }
     in.close();
+    map_vertices_faces();
     on_model_load();
+}
+
+void Model::map_vertices_faces(){
+    int num_verts = Vertices.cols();
+    std::vector<std::vector<int>> temp(num_verts);
+    vertex_to_faces = temp;
+
+    for (int face_num=0; face_num<Faces.cols(); face_num++){
+        for (int j=0; j<3; j++){
+            int vert = Faces(j, face_num);
+            vertex_to_faces[vert-1].push_back(face_num);
+        }
+    }
 }
 
 void Model::on_model_load(){
     calculate_face_normals();
-    int recursion_depth = 20;
+    int recursion_depth = 10;
     bounding_box = new BoundingBox(Vertices, Faces, recursion_depth);
+    calculate_vertex_normals();
 }
 
 
@@ -78,10 +97,9 @@ void Model::add_face_normal(Eigen::Vector3d face_normal){
 
 void Model::calculate_face_normals(){
     FaceNormals = Eigen::MatrixXd();
-    int num_cols = Faces.cols();
     Eigen::Vector3d first_vertex, second_vertex, third_vertex;
     Eigen::Vector3d first_vector, second_vector;
-    for (int i=0; i<num_cols; i++){
+    for (int i=0; i<Faces.cols(); i++){
         first_vertex << get_vertex( Faces(0, i) - 1 );
         second_vertex << get_vertex( Faces(1, i) - 1 );
         third_vertex << get_vertex( Faces(2, i) - 1 );
@@ -93,9 +111,58 @@ void Model::calculate_face_normals(){
     }
 }
 
+void Model::calculate_vertex_normals(){
+    // Assumes that calculate_face_normals was called first
+    int num_vert_norms = Faces.cols()*3;
+    std::vector<Eigen::Vector3d> temp(num_vert_norms);
+    vertex_normals = temp;
+    Eigen::Vector3d original, average;
+    for (int i=0; i<Faces.cols(); i++){
+        original = get_face_normal(i);
+        for (int f_vert=0; f_vert<3; f_vert++){
+            int vertex_num = Faces(f_vert, i);
+            average = get_face_normal(i);
+            calc_vertex_normal(vertex_num, original, average);
+            vertex_normals[3*i + f_vert] = average;
+        }
+    }
+}
+
+void Model::calc_vertex_normal(int vertex_num, const Eigen::Vector3d& original_face, Eigen::Vector3d& average){
+    int num_to_average = 1;
+    Eigen::Vector3d conn_face_normal;
+    for (auto connected_face:vertex_to_faces[vertex_num-1]){
+        conn_face_normal = get_face_normal(connected_face);
+        double angle = conn_face_normal.dot(original_face);
+        // If angle between face normals is less than 22.5 degrees then smooth between them
+        if (angle <= 1 && angle >=.9239){
+            average = average + conn_face_normal;
+            num_to_average++;
+        }
+    }
+    average = average.normalized();
+}
+
 Eigen::Vector3d Model::get_vertex(int index){
     Eigen::Vector3d vertex = Eigen::Vector3d(Vertices(0, index), Vertices(1, index), Vertices(2, index));
     return vertex;
+}
+
+Eigen::Vector3d Model::get_face_normal(int index){
+    Eigen::Vector3d normal = Eigen::Vector3d(FaceNormals(0, index), FaceNormals(1, index), FaceNormals(2, index));
+    return normal;
+}
+
+Eigen::Vector3d Model::get_smooth_face_normal(int face_num, double beta, double gamma){
+    Eigen::Vector3d normal_one, normal_two, normal_three;
+    normal_one = get_vertex_normal(face_num, 0);
+    normal_two = get_vertex_normal(face_num, 1);
+    normal_three = get_vertex_normal(face_num, 2);
+    return ((1-beta-gamma) * normal_one + beta*normal_two + gamma*normal_three).normalized();
+}
+
+Eigen::Vector3d Model::get_vertex_normal(int face_num, int face_vert){
+    return vertex_normals[face_num*3 + face_vert];
 }
 
 Eigen::MatrixXd Model::get_vertices(){
@@ -105,49 +172,6 @@ Eigen::MatrixXd Model::get_vertices(){
 void Model::save_vertices(Eigen::MatrixXd new_vs){
     Vertices = new_vs;
     on_model_load();
-}
-
-void Model::save_model(std::ostream &output){
-    std::ifstream original(original_file);
-    std::string orig_line;
-
-    int vert_num = 0;
-    while (std::getline(original, orig_line)){
-        if (orig_line.size() > 0 && !std::isspace(orig_line[0])){
-            if (orig_line[0] == 's' || (orig_line[0] == 'v' && orig_line[1] == 'n')){
-                continue;
-            } else{
-                if (orig_line[0] == 'v'){
-                    output << "v";
-                    int PRECISION = 7;
-                    for (int i=0; i<3; i++){
-                        output << " ";
-                        output_formatted_float(output, Vertices(i, vert_num), PRECISION);
-                    }
-                    output << "\n";
-                    vert_num++;
-                } else{
-                    output << orig_line << "\n";
-                }
-            }
-        }
-    }
-    original.close();
-}
-
-void Model::output_formatted_float(std::ostream &o, double number, int precision){
-    // Outputs doubles with "precision" worth of tens places after period
-    std::string output_str = std::to_string(number);
-    int index_of_period = output_str.find('.');
-    if (index_of_period == -1){
-        output_str += ".";
-        index_of_period = output_str.find('.');
-    }
-    unsigned int goal_length = index_of_period + precision + 1;
-    while (output_str.size() < goal_length){
-        output_str += "0";
-    }
-    o << output_str;
 }
 
 bool Model::model_loaded(){
@@ -206,9 +230,12 @@ double Model::intersect_ray(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, Eig
         t_value = MMs3.determinant() / M.determinant();
         if ((t_value < smallest_t) && (t_value > 0.00001)){
             smallest_t = t_value;
-            hit_normal << FaceNormals(0, face_num),
-                          FaceNormals(1, face_num),
-                          FaceNormals(2, face_num);
+            if (smoothing){
+                hit_normal = get_smooth_face_normal(face_num, beta, gamma);
+            } else{
+                hit_normal = get_face_normal(face_num);
+            }
+
             if (hit_normal.dot(ray_dir) > 0)
                 hit_normal = -1 * hit_normal;
         }

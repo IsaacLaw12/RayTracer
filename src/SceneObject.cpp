@@ -24,3 +24,9 @@ Eigen::Matrix3d SceneObject::get_specular_color(){
 Eigen::Matrix3d SceneObject::get_attenuation_color(){
     return attenuation_color;
 }
+
+Eigen::Vector3d SceneObject::get_kr(){
+    // The amount of light that is passed back by each level of recursion
+    Eigen::Vector3d kr(1,1,1);
+    return kr;
+}

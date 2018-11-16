@@ -15,6 +15,7 @@ class SceneObject {
         Eigen::Matrix3d get_ambient_color();
         Eigen::Matrix3d get_specular_color();
         Eigen::Matrix3d get_attenuation_color();
+        Eigen::Vector3d get_kr();
     protected:
         double phong;
         Eigen::Matrix3d ambient_color = Eigen::Matrix3d().Zero();

@@ -29,9 +29,10 @@ class Scene {
         void add_light(std::string driver_line);
 
         // Methods to render image
-        void ray_trace();
+        void shoot_rays();
+        void ray_trace(Eigen::Vector3d& ray_pt, Eigen::Vector3d& ray_dir, Eigen::Vector3d& accum, Eigen::Vector3d& ampl, int level);
         double find_intersection(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, SceneObject*& md, Eigen::Vector3d &hit_normal);
-        Eigen::Vector3d calculate_color(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, double t_value, SceneObject* hit_model, Eigen::Vector3d &hit_normal);
+        Eigen::Vector3d calculate_color(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, double t_value, SceneObject* hit_obj, Eigen::Vector3d &hit_normal, Eigen::Vector3d &accum, Eigen::Vector3d &ampl, int level);
         bool lightReachesObject(Light& light, Eigen::Vector3d intersect_pos);
 
         std::string orig_driver_file = "";
@@ -43,6 +44,7 @@ class Scene {
         std::vector<Light> scene_lights;
         Eigen::Vector3d ambient;
 
+        int recursion_level = 0;
         double MISSED_T_VALUE = 1000000000;
 };
 #endif
