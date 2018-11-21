@@ -15,7 +15,6 @@ class Transformation {
   public:
         Transformation(std::string driver_file);
         void transform_object();
-        void save_model(std::ostream &output);
         std::string get_model_file_name();
         bool transform_loaded();
         Model* get_model();

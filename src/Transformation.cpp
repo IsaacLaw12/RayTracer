@@ -10,6 +10,7 @@ Transformation::Transformation(std::string driver_string){
     std::stringstream driver(driver_string);
     double transform_floats[8] = {};
     std::string driver_type = "";
+    std::string smoothing = "";
     driver >> driver_type;
 
     double temp = 0;
@@ -27,9 +28,15 @@ Transformation::Transformation(std::string driver_string){
     generate_transform_matrix();
 
     driver.clear();
+    driver >> smoothing;
     driver >> model_file_name;
 
-    target_model = new Model(model_file_name);
+    if (model_file_name.size() == 0){
+        // Attempt to make program backwards compatible with older driver files
+        model_file_name = smoothing;
+    }
+
+    target_model = new Model(model_file_name, smoothing);
     if (!target_model->model_loaded()){
         std::cout << "MODEL NOT LOADED" << "\n";
         load_successful = false;
@@ -96,10 +103,6 @@ void Transformation::generate_transform_matrix(){
 void Transformation::transform_object(){
     Eigen::MatrixXd temp = final_matrix * target_model->get_vertices();
     target_model->save_vertices( temp );
-}
-
-void Transformation::save_model(std::ostream &output){
-    target_model->save_model(output);
 }
 
 std::string Transformation::get_model_file_name(){

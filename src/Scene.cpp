@@ -12,7 +12,7 @@ Scene::Scene(std::string driver_file){
 }
 
 void Scene::render_image(std::string save_image_file){
-    ray_trace();
+    shoot_rays();
     destination_image.save_image(save_image_file);
 }
 
@@ -62,6 +62,7 @@ void Scene::edit_camera(std::string driver_line){
     std::string focal_length = "d";
     std::string bounds = "bounds";
     std::string res = "res";
+    std::string recursion = "recursionLevel";
     std::stringstream d_line(driver_line);
 
     std::string line_type;
@@ -86,6 +87,8 @@ void Scene::edit_camera(std::string driver_line){
         d_line >> d1 >> d2;
         scene_camera.set_resolution(d1, d2);
         destination_image = Image(d1, d2);
+    }else if(!driver_line.compare(0, recursion.size(), recursion)){
+        d_line >> recursion_level;
     }
 }
 
@@ -124,13 +127,8 @@ void Scene::add_light(std::string driver_line){
     scene_lights.push_back(light);
 }
 
-void Scene::ray_trace(){
-    double t_value;
-    Eigen::Vector3d ray_pt, ray_dir, color, hit_normal;
-    if (scene_objects.size() == 0){
-        return;
-    }
-    SceneObject* hit_obj = scene_objects[0];
+void Scene::shoot_rays(){
+    Eigen::Vector3d ray_pt, ray_dir, color, ampl;
 
     std::cout << "starting ray tracing" << "\n";
     for (int i=0; i<scene_camera.pixel_width; i++){
@@ -140,12 +138,23 @@ void Scene::ray_trace(){
         for (int j=0; j<scene_camera.pixel_height; j++){
             ray_pt = scene_camera.get_pixel_position(i, j);
             ray_dir = (ray_pt - scene_camera.get_eye()).normalized();
-            t_value = find_intersection(ray_pt, ray_dir, hit_obj, hit_normal);
-            color = calculate_color(ray_pt, ray_dir, t_value, hit_obj, hit_normal);
+            color << 0,0,0;
+            ampl << 1,1,1;
+            ray_trace(ray_pt, ray_dir, color, ampl, recursion_level);
             destination_image.write_pixel(i, j, color);
         }
      }
      std::cout << "end of ray tracing \n";
+}
+
+void Scene::ray_trace(Eigen::Vector3d& ray_pt, Eigen::Vector3d& ray_dir, Eigen::Vector3d& accum, Eigen::Vector3d& ampl, int level){
+    if (scene_objects.size() == 0){
+        return;
+    }
+    SceneObject* hit_obj = scene_objects[0];
+    Eigen::Vector3d hit_normal;
+    double t_value = find_intersection(ray_pt, ray_dir, hit_obj, hit_normal);
+    calculate_color(ray_pt, ray_dir, t_value, hit_obj, hit_normal, accum, ampl, level);
 }
 
 double Scene::find_intersection(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, SceneObject*& md, Eigen::Vector3d &hit_normal){
@@ -166,7 +175,7 @@ double Scene::find_intersection(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir,
     return intersect_t;
 }
 
-Eigen::Vector3d Scene::calculate_color(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, double t_value, SceneObject* hit_obj, Eigen::Vector3d &hit_normal){
+Eigen::Vector3d Scene::calculate_color(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, double t_value, SceneObject* hit_obj, Eigen::Vector3d &hit_normal, Eigen::Vector3d &accum, Eigen::Vector3d &ampl, int level){
     Eigen::Vector3d vector_to_light, intersect_pos, dif_refl, color;
     Eigen::Vector3d obj_intsct_vector, light_reflect_point;
     if (t_value == MISSED_T_VALUE){
@@ -184,10 +193,7 @@ Eigen::Vector3d Scene::calculate_color(Eigen::Vector3d ray_pt, Eigen::Vector3d r
         vector_to_light = (light.get_pos() - intersect_pos).normalized();
         light_concentration = hit_normal.dot(vector_to_light);
         if (light_concentration < 0){
-            //std::cout << "light_con: " << light_concentration << "\n";
-            //if (light_concentration > -.3)
                 continue;
-            //light_concentration = (-1 * hit_normal).dot(vector_to_light);
         }
 
         dif_refl =  hit_obj->get_diffuse_color() * light.get_color() * light_concentration;
@@ -204,6 +210,13 @@ Eigen::Vector3d Scene::calculate_color(Eigen::Vector3d ray_pt, Eigen::Vector3d r
         }
 
     }
+    accum = accum + ampl.cwiseProduct(color);
+    if (level > 0){
+        Eigen::Vector3d new_ray = -1 * ray_dir;
+        new_ray = (2 * hit_normal.dot(new_ray) * hit_normal - new_ray).normalized();
+        ampl = hit_obj->get_kr().cwiseProduct(ampl);
+        ray_trace(intersect_pos, new_ray, accum, ampl, --level);
+    }
     return color;
 }
 
@@ -213,7 +226,6 @@ bool Scene::lightReachesObject(Light& light, Eigen::Vector3d intersect_pos){
 
     double distance_to_light = (light.get_pos() - intersect_pos).norm();
     Eigen::Vector3d vector_to_light = (light.get_pos() - intersect_pos).normalized();
-    //std::cout << "ip: \n" << intersect_pos << "\nvtl\n" << vector_to_light << "\n";
     double t_value = find_intersection(intersect_pos, vector_to_light, unused_so, unused_norm);
     if (t_value == MISSED_T_VALUE || (distance_to_light < t_value)){
         return true;
