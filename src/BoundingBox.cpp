@@ -172,14 +172,14 @@ void BoundingBox::calculate_bounding(){
     }
 }
 
-std::set<int> BoundingBox::intersected_faces(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir){
+std::set<int> BoundingBox::intersected_faces(Ray& ray){
     std::set<int> intersected_faces;
-    if (!ray_intersects(ray_pt, ray_dir)){
+    if (!ray_intersects(ray)){
         return intersected_faces;
     }
     if (contained_boxes.size() > 0){
         for (auto sub_bb: contained_boxes){
-            std::set<int> hit_faces = sub_bb->intersected_faces(ray_pt, ray_dir);
+            std::set<int> hit_faces = sub_bb->intersected_faces(ray);
             intersected_faces.insert(hit_faces.begin(), hit_faces.end());
         }
     } else{
@@ -187,20 +187,10 @@ std::set<int> BoundingBox::intersected_faces(Eigen::Vector3d ray_pt, Eigen::Vect
     }
     return intersected_faces;
 }
-/*
-bool BoundingBox::ray_intersects(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir){
-    double radius = (center - min_corner).norm();
-    double v = (center - ray_pt).dot(ray_dir);
-    double c = (center - ray_pt).norm();
-    if ((radius*radius) > (c*c - v*v)){
-        return true;
-    } else{
-        return false;
-    }
-}
-*/
-bool BoundingBox::ray_intersects(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir)
-{
+
+bool BoundingBox::ray_intersects(Ray& ray){
+    const Eigen::Vector3d& ray_pt = ray.get_point();
+    const Eigen::Vector3d& ray_dir = ray.get_dir();
     double tmin = (min_corner(0) - ray_pt(0)) / ray_dir(0);
     double tmax = (max_corner(0) - ray_pt(0)) / ray_dir(0);
 

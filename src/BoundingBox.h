@@ -7,6 +7,7 @@
 #include <set>
 class Model;
 #include "Model.h"
+#include "Ray.h"
 #include <limits>
 
 // Needs to link Eigen in the makefile with g++ -I/path/to/Eigen
@@ -23,7 +24,7 @@ class BoundingBox {
         Eigen::Vector3d get_max_corner();
         Eigen::Vector3d get_vertex(int index);
         std::vector<int> get_contained_faces();
-        std::set<int> intersected_faces(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir);
+        std::set<int> intersected_faces(Ray& ray);
   private:
         void find_contained_faces();
         double max(double a, double b, double c);
@@ -33,7 +34,7 @@ class BoundingBox {
         void find_corners();
         void subdivide_box();
         void calculate_bounding();
-        bool ray_intersects(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir);
+        bool ray_intersects(Ray& ray);
 
         Eigen::MatrixXd& Vertices;
         Eigen::MatrixXi& Faces;

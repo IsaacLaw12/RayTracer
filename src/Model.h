@@ -8,6 +8,7 @@
 class BoundingBox;
 #include "BoundingBox.h"
 #include "SceneObject.h"
+#include "Ray.h"
 
 // Needs to link Eigen in the makefile with g++ -I/path/to/Eigen
 #include <Eigen>
@@ -27,8 +28,8 @@ class Model: public SceneObject {
         void save_vertices(Eigen::MatrixXd new_vs);
         bool model_loaded();
 
-        double intersect_ray(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, Eigen::Vector3d &hit_normal);
-        bool test_intersection(Eigen::Vector3d &vertex_a, Eigen::Vector3d &vertex_b, Eigen::Vector3d &vertex_c, Eigen::Vector3d& ray_pt, Eigen::Vector3d& ray_dir, double& t_value);
+        double intersect_ray(Ray& ray, Eigen::Vector3d &hit_normal);
+        bool test_intersection(Eigen::Vector3d &vertex_a, Eigen::Vector3d &vertex_b, Eigen::Vector3d &vertex_c, Ray& ray, double& t_value);
 
   private:
         friend class BoundingBox;

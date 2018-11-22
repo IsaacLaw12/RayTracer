@@ -34,7 +34,9 @@ Sphere::Sphere(std::string driver_line){
 }
 
 
-double Sphere::intersect_ray(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, Eigen::Vector3d &hit_normal){
+double Sphere::intersect_ray(Ray& ray, Eigen::Vector3d &hit_normal){
+    const Eigen::Vector3d &ray_pt = ray.get_point();
+    const Eigen::Vector3d &ray_dir = ray.get_dir();
     double t_value = -1;
     double v = (sphere_center - ray_pt).dot(ray_dir);
     double c = (sphere_center - ray_pt).norm();
@@ -51,9 +53,29 @@ double Sphere::intersect_ray(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, Ei
     return t_value;
 }
 
-bool Sphere::ray_intersects(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir){
-    double v = (sphere_center - ray_pt).dot(ray_dir);
-    double c = (sphere_center - ray_pt).norm();
+Eigen::Vector3d Sphere::refract_ray(Ray& w, Eigen::Vector3d& intersect_pos, Eigen::Vector3d& normal){
+    double etar = get_eta() / 1.0;
+    double a = - etar;
+    double wn = w.dot(normal);
+    double radsq = etar*etar * (wn*wn -1) + 1;
+    double b = (etar * wn) - std::sqrt(radsq);
+    Eigen::Vector3d T = a * w + b * N;
+    return T;
+}
+
+Ray Sphere::get_refracted_ray(Ray& w, Eigen::Vector3d& intersect_pos, Eigen::Vector3d& normal){
+    Eigen::Vector3d T1, T2;
+    T1 = refract_ray(w, intersect_pos, (intersect_pos - sphere_center).normalized() );
+    Eigen::Vector3d exit = intersect_pos + 2 * (sphere_center - intersect_pos).dot(T1) * T1;
+    Eigen::Vector3d Nin = (sphere_center - exit).normalized();
+    Eigen::Vector3d T2 = refract_ray(-T1, exit, Nin);
+    Ray exit_ray = Ray(exit, T2);
+    return exit_ray;
+}
+
+bool Sphere::ray_intersects(Ray& ray){
+    double v = (sphere_center - ray.get_point()).dot(ray.get_dir());
+    double c = (sphere_center - ray.get_point()).norm();
     if ((radius*radius) > (c*c - v*v)){
         return true;
     } else{

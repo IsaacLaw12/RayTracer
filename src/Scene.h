@@ -11,6 +11,7 @@
 #include "Light.h"
 #include "Sphere.h"
 #include "SceneObject.h"
+#include "Ray.h"
 
 
 class Scene {
@@ -30,9 +31,9 @@ class Scene {
 
         // Methods to render image
         void shoot_rays();
-        void ray_trace(Eigen::Vector3d& ray_pt, Eigen::Vector3d& ray_dir, Eigen::Vector3d& accum, Eigen::Vector3d& ampl, int level);
-        double find_intersection(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, SceneObject*& md, Eigen::Vector3d &hit_normal);
-        Eigen::Vector3d calculate_color(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, double t_value, SceneObject* hit_obj, Eigen::Vector3d &hit_normal, Eigen::Vector3d &accum, Eigen::Vector3d &ampl, int level);
+        void ray_trace(Ray& ray, Eigen::Vector3d& accum, Eigen::Vector3d& ampl, int level);
+        double find_intersection(Ray& ray, SceneObject*& md, Eigen::Vector3d &hit_normal);
+        Eigen::Vector3d calculate_color(Ray& ray, double t_value, SceneObject* hit_obj, Eigen::Vector3d &hit_normal, Eigen::Vector3d &accum, Eigen::Vector3d &ampl, int level);
         bool lightReachesObject(Light& light, Eigen::Vector3d intersect_pos);
 
         std::string orig_driver_file = "";

@@ -182,15 +182,16 @@ Eigen::MatrixXi Model::get_faces(){
     return Faces;
 }
 
-double Model::intersect_ray(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, Eigen::Vector3d &hit_normal){
+double Model::intersect_ray(Ray& ray, Eigen::Vector3d &hit_normal){
     double smallest_t = MISSED_T_VALUE;
+    const Eigen::Vector3d& ray_dir = ray.get_dir();
 
     Eigen::Vector3d a_vertex, b_vertex, c_vertex,  a_b, a_c, a_l, solution;
     Eigen::Matrix3d M = Eigen::Matrix3d();
     Eigen::Matrix3d MMs1, MMs2, MMs3;
     double beta, gamma, t_value;
 
-    std::set<int> intersected_faces = bounding_box->intersected_faces(ray_pt, ray_dir);
+    std::set<int> intersected_faces = bounding_box->intersected_faces(ray);
     //std::cout << "Intersected_faces: "<<intersected_faces.size() << "\n";
     //std::cout << "returned intersected faces: \n ";
     //    for (auto i = intersected_faces.begin(); i != intersected_faces.end(); ++i)
@@ -204,7 +205,7 @@ double Model::intersect_ray(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, Eig
 
         a_b = a_vertex - b_vertex;
         a_c = a_vertex - c_vertex;
-        a_l = a_vertex - ray_pt;
+        a_l = a_vertex - ray.get_point();
 
         M << a_b(0), a_c(0), ray_dir(0),
              a_b(1), a_c(1), ray_dir(1),
@@ -244,14 +245,14 @@ double Model::intersect_ray(Eigen::Vector3d ray_pt, Eigen::Vector3d ray_dir, Eig
     return smallest_t;
 }
 
-bool Model::test_intersection(Eigen::Vector3d &vertex_a, Eigen::Vector3d &vertex_b, Eigen::Vector3d &vertex_c, Eigen::Vector3d& ray_pt, Eigen::Vector3d& ray_dir, double& t_value){
+bool Model::test_intersection(Eigen::Vector3d &vertex_a, Eigen::Vector3d &vertex_b, Eigen::Vector3d &vertex_c, Ray& ray, double& t_value){
     // Moller Trumbore Algorithm
     const double EPSILON = 0.0000001;
     Eigen::Vector3d edge_ba, edge_ca, pvec, qvec, origin_a;
     double det, invDet, u,v;
     edge_ba = vertex_b - vertex_a;
     edge_ca = vertex_c - vertex_a;
-    pvec = ray_dir.cross(edge_ca);
+    pvec = ray.get_dir().cross(edge_ca);
     det = pvec.dot(edge_ba);
     if (abs(det) < EPSILON){
         // This ray is parallel to this triangle
@@ -260,14 +261,14 @@ bool Model::test_intersection(Eigen::Vector3d &vertex_a, Eigen::Vector3d &vertex
     }
     invDet = 1.0 / det;
     // Check that u is in bounds
-    origin_a = ray_pt - vertex_a;
+    origin_a = ray.get_point() - vertex_a;
     u = (origin_a.dot(pvec)) * invDet;
     std::cout << "1\n";
     if (u < 0.0 || u > 1.0)
         return false;
     std::cout << "2\n";
     qvec = origin_a.cross(edge_ba);
-    v = ray_dir.dot(qvec) * invDet;
+    v = ray.get_dir().dot(qvec) * invDet;
     if (v < 0.0 || (u + v) > 1.0)
         return false;
     std::cout << "3\n";
