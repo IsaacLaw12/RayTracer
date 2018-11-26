@@ -4,17 +4,21 @@
 Sphere::Sphere(std::string driver_line){
     double x, y, z, rad, ka_red, ka_blue, ka_green, kd_red, kd_blue, kd_green,
         ks_red, ks_blue, ks_green, katt_red, katt_blue, katt_green;
+        
+    // If driver file does not include refraction constants default to 1, no refraction;
+    double ref_red, ref_green, ref_blue;
+    ref_red = 1; ref_green = 1; ref_blue = 1;
 
     std::string driver_type;
 
     std::stringstream read_sphere(driver_line);
     read_sphere >> driver_type >> x >> y >> z >> rad >> ka_red >> ka_blue >> ka_green >> kd_red >> kd_blue >> kd_green >>
-        ks_red >> ks_blue >> ks_green>> katt_red>> katt_blue>> katt_green;
+        ks_red >> ks_blue >> ks_green>> katt_red>> katt_blue>> katt_green >> ref_red >> ref_green >> ref_blue >> phong >> eta;
 
     sphere_center << x, y, z;
     radius = rad;
     // Just a constant used for spheres
-    phong = 16;
+
 
     ambient_color(0, 0) = ka_red;
     ambient_color(1, 1) = ka_blue;
@@ -31,6 +35,10 @@ Sphere::Sphere(std::string driver_line){
     attenuation_color(0, 0) = katt_red;
     attenuation_color(1, 1) = katt_blue;
     attenuation_color(2, 2) = katt_green;
+    
+    refract_color(0, 0) = ref_red;
+    refract_color(1, 1) = ref_green;
+    refract_color(2, 2) = ref_blue;
 }
 
 
@@ -53,22 +61,26 @@ double Sphere::intersect_ray(Ray& ray, Eigen::Vector3d &hit_normal){
     return t_value;
 }
 
-Eigen::Vector3d Sphere::refract_ray(Ray& w, Eigen::Vector3d& intersect_pos, Eigen::Vector3d& normal){
-    double etar = get_eta() / 1.0;
+Eigen::Vector3d Sphere::refract_ray(Eigen::Vector3d &w, Eigen::Vector3d &intersect_pos, Eigen::Vector3d &normal, double first_eta, double second_eta){
+    // Assumes eta outside of sphere is 1
+    double etar = first_eta / second_eta;
     double a = - etar;
     double wn = w.dot(normal);
     double radsq = etar*etar * (wn*wn -1) + 1;
     double b = (etar * wn) - std::sqrt(radsq);
-    Eigen::Vector3d T = a * w + b * N;
-    return T;
+    Eigen::Vector3d T = a * w + b * normal;
+    return T.normalized();
 }
 
-Ray Sphere::get_refracted_ray(Ray& w, Eigen::Vector3d& intersect_pos, Eigen::Vector3d& normal){
+Ray Sphere::get_refracted_ray(Ray &orig_ray, Eigen::Vector3d &intersect_pos, Eigen::Vector3d &normal){
     Eigen::Vector3d T1, T2;
-    T1 = refract_ray(w, intersect_pos, (intersect_pos - sphere_center).normalized() );
+    double this_eta = get_eta();
+    Eigen::Vector3d ray_dir_reverse = orig_ray.get_dir();
+    T1 = refract_ray(ray_dir_reverse, intersect_pos, normal, 1.0, this_eta);
     Eigen::Vector3d exit = intersect_pos + 2 * (sphere_center - intersect_pos).dot(T1) * T1;
     Eigen::Vector3d Nin = (sphere_center - exit).normalized();
-    Eigen::Vector3d T2 = refract_ray(-T1, exit, Nin);
+    T1 = -1 * T1;
+    T2 = refract_ray(T1, exit, Nin, this_eta, 1.0);
     Ray exit_ray = Ray(exit, T2);
     return exit_ray;
 }

@@ -213,22 +213,25 @@ Eigen::Vector3d Scene::calculate_color(Ray& ray, double t_value, SceneObject* hi
 
     }
     accum = accum + ampl.cwiseProduct(color);
+    
+    Eigen::Vector3d kr_ampl = hit_obj->get_kr() * ampl;
+    Eigen::Matrix3d ko = hit_obj->get_ko();
+    double opacity = (ko * Eigen::Vector3d(1,1,1)).dot(Eigen::Vector3d(1,1,1));
     if (level > 0){
         Eigen::Vector3d reflect_accum = Eigen::Vector3d::Zero();
-        Eigen::Vector3d ray_dir = -1 * ray.get_dir();
-        ray_dir = (2 * hit_normal.dot(ray_dir) * hit_normal - ray_dir).normalized();
-        ampl = hit_obj->get_kr().cwiseProduct(ampl);
+        Eigen::Vector3d w = -1 * ray.get_dir();
+        Eigen::Vector3d ray_dir = (2 * hit_normal.dot(w) * hit_normal - w).normalized();
         Ray reflect_ray = Ray(intersect_pos, ray_dir);
-        ray_trace(reflect_ray, reflect_accum, ampl, --level);
-        accum = accum + ampl.cwiseProduct(hit_obj->get_ko()).cwiseProduct(reflect_accum);
+        ray_trace(reflect_ray, reflect_accum, kr_ampl, --level);
+        Eigen::Vector3d reflect_ampl = ko * ampl;
+        accum = accum + reflect_ampl.cwiseProduct(reflect_accum);
     }
-    Eigen::Vector3d ko = hit_obj->get_ko();
-    double opacity = ko.dot(Eigen::Vector3d(0,0,0));
     if (level > 0 && opacity < 3.0){
         Eigen::Vector3d refract_accum = Eigen::Vector3d::Zero();
-        Ray refract_ray = hit_obj->get_refracted_ray(-1*ray.get_dir(), hit_normal);
-        ray_trace(refract_ray, refract_accum, hit_obj->get_kr().cwiseProduct(accum), --level);
-        accum = accum + ampl.cwiseProduct(Eigen::Vector3d(1,1,1) - hit_obj->get_ko()).cwiseProduct(refract_accum);
+        Ray refract_ray = hit_obj->get_refracted_ray(ray, intersect_pos, hit_normal);
+        ray_trace(refract_ray, refract_accum, kr_ampl, --level);
+        Eigen::Vector3d refract_ampl = (Eigen::Matrix3d::Identity() - ko) * ampl;
+        accum = accum + refract_ampl.cwiseProduct(refract_accum);
     }
     return color;
 }
