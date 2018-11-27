@@ -29,6 +29,8 @@ class Model: public SceneObject {
         bool model_loaded();
 
         double intersect_ray(Ray& ray, Eigen::Vector3d &hit_normal);
+        Ray get_refracted_ray(Ray &orig_ray, Eigen::Vector3d &intersect_pos, Eigen::Vector3d &normal);
+        void get_refract_exit(Eigen::Vector3d &intersect_pos, Eigen::Vector3d &refract_ray, Eigen::Vector3d &exit, Eigen::Vector3d& exit_normal);
         bool test_intersection(Eigen::Vector3d &vertex_a, Eigen::Vector3d &vertex_b, Eigen::Vector3d &vertex_c, Ray& ray, double& t_value);
 
   private:

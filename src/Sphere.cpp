@@ -61,28 +61,22 @@ double Sphere::intersect_ray(Ray& ray, Eigen::Vector3d &hit_normal){
     return t_value;
 }
 
-Eigen::Vector3d Sphere::refract_ray(Eigen::Vector3d &w, Eigen::Vector3d &intersect_pos, Eigen::Vector3d &normal, double first_eta, double second_eta){
-    // Assumes eta outside of sphere is 1
-    double etar = first_eta / second_eta;
-    double a = - etar;
-    double wn = w.dot(normal);
-    double radsq = etar*etar * (wn*wn -1) + 1;
-    double b = (etar * wn) - std::sqrt(radsq);
-    Eigen::Vector3d T = a * w + b * normal;
-    return T.normalized();
-}
-
 Ray Sphere::get_refracted_ray(Ray &orig_ray, Eigen::Vector3d &intersect_pos, Eigen::Vector3d &normal){
     Eigen::Vector3d T1, T2;
     double this_eta = get_eta();
-    Eigen::Vector3d ray_dir_reverse = orig_ray.get_dir();
-    T1 = refract_ray(ray_dir_reverse, intersect_pos, normal, 1.0, this_eta);
-    Eigen::Vector3d exit = intersect_pos + 2 * (sphere_center - intersect_pos).dot(T1) * T1;
-    Eigen::Vector3d Nin = (sphere_center - exit).normalized();
+    Eigen::Vector3d W = -1 * orig_ray.get_dir();
+    T1 = refract_ray(W, normal, 1.0, this_eta);
+    Eigen::Vector3d exit, Nin;
+    get_refract_exit(intersect_pos, T1, exit, Nin);
     T1 = -1 * T1;
-    T2 = refract_ray(T1, exit, Nin, this_eta, 1.0);
+    T2 = refract_ray(T1, Nin, this_eta, 1.0);
     Ray exit_ray = Ray(exit, T2);
     return exit_ray;
+}
+
+void Sphere::get_refract_exit(Eigen::Vector3d &intersect_pos, Eigen::Vector3d &refract_ray, Eigen::Vector3d &exit, Eigen::Vector3d& exit_normal){
+    exit = intersect_pos + 2 * (sphere_center - intersect_pos).dot(refract_ray) * refract_ray;
+    exit_normal = (sphere_center - exit).normalized();
 }
 
 bool Sphere::ray_intersects(Ray& ray){

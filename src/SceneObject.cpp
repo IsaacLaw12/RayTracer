@@ -1,16 +1,14 @@
 #include "SceneObject.h"
+#include <iostream>
 
-double SceneObject::intersect_ray(Ray&, Eigen::Vector3d &){
-    // Object specific function
-    return -1;
-}
-
-Ray SceneObject::get_refracted_ray(Ray&, Eigen::Vector3d&, Eigen::Vector3d&){
-    return Ray( Eigen::Vector3d(0,0,0), Eigen::Vector3d(0,0,0));
-}
-
-Eigen::Vector3d SceneObject::refract_ray(Eigen::Vector3d &, Eigen::Vector3d&, Eigen::Vector3d&, double, double){
-    return Eigen::Vector3d(0,0,0);
+Eigen::Vector3d SceneObject::refract_ray(Eigen::Vector3d &w, Eigen::Vector3d &normal, double first_eta, double second_eta){
+    double etar = first_eta / second_eta;
+    double a = - etar;
+    double wn = w.dot(normal);
+    double radsq = etar*etar * (wn*wn -1) + 1;
+    double b = (etar * wn) - std::sqrt(radsq);
+    Eigen::Vector3d T = a * w + b * normal;
+    return T;
 }
 
 double SceneObject::get_phong(){

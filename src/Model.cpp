@@ -245,6 +245,25 @@ double Model::intersect_ray(Ray& ray, Eigen::Vector3d &hit_normal){
     return smallest_t;
 }
 
+Ray Model::get_refracted_ray(Ray &orig_ray, Eigen::Vector3d &intersect_pos, Eigen::Vector3d &normal){
+    Eigen::Vector3d T1, T2;
+    double this_eta = get_eta();
+    Eigen::Vector3d W = -1 * orig_ray.get_dir();
+    T1 = refract_ray(W, normal, 1.0, this_eta);
+    Eigen::Vector3d exit, Nin;
+    get_refract_exit(intersect_pos, T1, exit, Nin);
+    T1 = -1 * T1;
+    T2 = refract_ray(T1, Nin, this_eta, 1.0);
+    Ray exit_ray = Ray(exit, T2);
+    return exit_ray;
+}
+
+void Model::get_refract_exit(Eigen::Vector3d &intersect_pos, Eigen::Vector3d &refract_ray, Eigen::Vector3d &exit, Eigen::Vector3d& exit_normal){
+    Ray refracted = Ray(intersect_pos, refract_ray);
+    double t_value = intersect_ray(refracted, exit_normal);
+    exit = intersect_pos + refract_ray * t_value;
+}
+
 bool Model::test_intersection(Eigen::Vector3d &vertex_a, Eigen::Vector3d &vertex_b, Eigen::Vector3d &vertex_c, Ray& ray, double& t_value){
     // Moller Trumbore Algorithm
     const double EPSILON = 0.0000001;
@@ -312,6 +331,29 @@ void Model::load_material(std::string material_file){
             diffuse_color(0, 0) = k1;
             diffuse_color(1, 1) = k2;
             diffuse_color(2, 2) = k3;
+        }
+        
+        if (line_type[0] == 'K' && line_type[1] == 's'){
+            obj_read >> k1 >> k2 >> k3;
+            specular_color(0, 0) = k1;
+            specular_color(1, 1) = k2;
+            specular_color(2, 2) = k3;
+        }
+        
+        if (line_type[0] == 'K' && line_type[1] == 'o'){
+            obj_read >> k1 >> k2 >> k3;
+            refract_color(0, 0) = k1;
+            refract_color(1, 1) = k2;
+            refract_color(2, 2) = k3;
+        }
+        
+        if (line_type[0] == 'e'){
+            if (line_type[1] == 't'){
+                if (line_type[2] == 'a'){
+                    obj_read >> k1;
+                    eta = k1;
+                }
+            }
         }
 
         if (line_type[0] == 'N' && line_type[1] == 's'){
