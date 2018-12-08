@@ -23,37 +23,69 @@ void Model::load_model(){
         load_successful = false;
         return;
     }
+    set_matrices(in);
+
+    int face_num = 0;
+    int vert_num = 0;
     std::string obj_line;
     std::string line_type = "";
     double vx, vy, vz;
     int f1, f2, f3;
     std::string s1, s2, s3;
+    std::stringstream obj_read;
+    std::cout << "Reading in Vertices and Faces\n";
     while (std::getline(in, obj_line)){
         if(obj_line.empty()){
+            std::cout << "empty ";
             continue;
         }
-        std::stringstream obj_read(obj_line);
+        obj_read = std::stringstream(obj_line);
         obj_read >> line_type;
         if (line_type[0] == 'v' && line_type.size() == 1){
             obj_read >> vx >> vy >> vz;
-            add_vertex(vx, vy, vz);
+            add_vertex(vx, vy, vz, vert_num++);
         }
-        if (line_type[0] == 'f'){
-            obj_read >> f1 >> s1;
-            obj_read >> f2 >> s2 ;
-            obj_read >> f3 >> s3 ;
-            add_face(f1, f2, f3);
+        else if (line_type[0] == 'f'){
+            obj_read >> f1 >> s1
+                     >> f2 >> s2
+                     >> f3 >> s3 ;
+            add_face(f1, f2, f3, face_num++);
         }
         // Materials line starts with mtllib
-        if (line_type[0] == 'm'){
+        else if (line_type[0] == 'm'){
             std::string file_name;
             obj_read >> file_name;
             load_material(file_name);
         }
     }
+    std::cout << "Finished loading vertices" << std::endl;
     in.close();
     map_vertices_faces();
     on_model_load();
+}
+
+void Model::set_matrices(std::ifstream &in){
+    int vertices = 0;
+    int faces = 0;
+    std::string obj_line, line_type;
+    std::stringstream obj_read;
+    while (std::getline(in, obj_line)){
+        if(obj_line.empty()){
+            continue;
+        }
+        obj_read = std::stringstream(obj_line);
+        obj_read >> line_type;
+        if (line_type[0] == 'v' && line_type.size() == 1){
+            vertices++;
+        }
+        if (line_type[0] == 'f'){
+            faces++;
+        }
+    }
+    Vertices = Eigen::MatrixXd(4, vertices);
+    Faces = Eigen::MatrixXi(3, faces);
+    in.clear();
+    in.seekg(0, std::ios::beg);
 }
 
 void Model::map_vertices_faces(){
@@ -71,22 +103,19 @@ void Model::map_vertices_faces(){
 
 void Model::on_model_load(){
     calculate_face_normals();
-    int recursion_depth = 10;
+    int recursion_depth = 8;
+    std::cout << "Building octtree\n";
     bounding_box = new BoundingBox(Vertices, Faces, recursion_depth);
     calculate_vertex_normals();
 }
 
 
-void Model::add_vertex(double vx, double vy, double vz){
-    int num_cols = Vertices.cols();
-    Vertices.conservativeResize(4, num_cols+1);
-    Vertices.col(num_cols) << vx, vy, vz, 1;
+void Model::add_vertex(double vx, double vy, double vz, int vertex_num){
+    Vertices.col(vertex_num) << vx, vy, vz, 1;
 }
 
-void Model::add_face(int v1, int v2, int v3){
-    int num_cols = Faces.cols();
-    Faces.conservativeResize(3, num_cols+1);
-    Faces.col(num_cols) << v1, v2, v3;
+void Model::add_face(int v1, int v2, int v3, int face_num){
+    Faces.col(face_num) << v1, v2, v3;
 }
 
 void Model::add_face_normal(Eigen::Vector3d face_normal){
@@ -332,21 +361,21 @@ void Model::load_material(std::string material_file){
             diffuse_color(1, 1) = k2;
             diffuse_color(2, 2) = k3;
         }
-        
+
         if (line_type[0] == 'K' && line_type[1] == 's'){
             obj_read >> k1 >> k2 >> k3;
             specular_color(0, 0) = k1;
             specular_color(1, 1) = k2;
             specular_color(2, 2) = k3;
         }
-        
+
         if (line_type[0] == 'K' && line_type[1] == 'o'){
             obj_read >> k1 >> k2 >> k3;
             refract_color(0, 0) = k1;
             refract_color(1, 1) = k2;
             refract_color(2, 2) = k3;
         }
-        
+
         if (line_type[0] == 'e'){
             if (line_type[1] == 't'){
                 if (line_type[2] == 'a'){

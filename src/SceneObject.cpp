@@ -44,3 +44,7 @@ Eigen::Matrix3d SceneObject::get_ko(){
     // The amount of light reflected vs refracted?
     return refract_color;
 }
+
+int SceneObject::get_lighting_group(){
+    return lighting_group;
+}

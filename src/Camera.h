@@ -14,11 +14,12 @@ class Camera {
         void set_focal_length(double foc_length);
         void set_bounds(double x1, double y1, double x2, double y2);
         void set_resolution(int width, int height);
+        void set_anti_alias(int aa_level);
         Eigen::Vector3d get_pixel_position(int x_pixel, int y_pixel);
         void calculate_axis();
 
-        int pixel_width;
-        int pixel_height;
+        int pixel_width = 0;
+        int pixel_height = 0;
         Eigen::Vector3d get_eye();
   private:
         Eigen::Vector3d eye = Eigen::Vector3d::Zero();
@@ -29,6 +30,7 @@ class Camera {
         Eigen::Vector3d z_axis = Eigen::Vector3d::Zero();
 
         double focal_length = 0;
+        int anti_alias = 0;
 
         double near_bounding_left;
         double near_bounding_right;

@@ -4,7 +4,7 @@
 Sphere::Sphere(std::string driver_line){
     double x, y, z, rad, ka_red, ka_blue, ka_green, kd_red, kd_blue, kd_green,
         ks_red, ks_blue, ks_green, katt_red, katt_blue, katt_green;
-        
+
     // If driver file does not include refraction constants default to 1, no refraction;
     double ref_red, ref_green, ref_blue;
     ref_red = 1; ref_green = 1; ref_blue = 1;
@@ -13,7 +13,7 @@ Sphere::Sphere(std::string driver_line){
 
     std::stringstream read_sphere(driver_line);
     read_sphere >> driver_type >> x >> y >> z >> rad >> ka_red >> ka_blue >> ka_green >> kd_red >> kd_blue >> kd_green >>
-        ks_red >> ks_blue >> ks_green>> katt_red>> katt_blue>> katt_green >> ref_red >> ref_green >> ref_blue >> phong >> eta;
+        ks_red >> ks_blue >> ks_green>> katt_red>> katt_blue>> katt_green >> ref_red >> ref_green >> ref_blue >> phong >> eta >> lighting_group;
 
     sphere_center << x, y, z;
     radius = rad;
@@ -35,7 +35,7 @@ Sphere::Sphere(std::string driver_line){
     attenuation_color(0, 0) = katt_red;
     attenuation_color(1, 1) = katt_blue;
     attenuation_color(2, 2) = katt_green;
-    
+
     refract_color(0, 0) = ref_red;
     refract_color(1, 1) = ref_green;
     refract_color(2, 2) = ref_blue;

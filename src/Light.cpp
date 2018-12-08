@@ -5,7 +5,8 @@
 Light::Light(std::string driver_line){
     // Light string: "light x_loc y_loc z_loc w r g b"
     std::stringstream driver(driver_line);
-    double light_obj_doubles[7] = {};
+    double light_obj_doubles[8] = {};
+    light_obj_doubles[7] = 0;
     std::string driver_type = "";
     driver >> driver_type;
 
@@ -14,7 +15,7 @@ Light::Light(std::string driver_line){
     while (driver >> temp){
         light_obj_doubles[counter++] = temp;
     }
-    if (counter != 7){
+    if (counter < 7 || counter > 8){
         // The correct number of numbers were not found
         load_successful = false;
         return;
@@ -30,6 +31,7 @@ void Light::assign_values(double spec_nums[]){
     double red_color = spec_nums[4];
     double green_color = spec_nums[5];
     double blue_color = spec_nums[6];
+    lighting_group = spec_nums[7];
     light_pos << x_cord, y_cord, z_cord;
     if (w_value == 0){
         light_pos = 1000000000 * light_pos;
@@ -47,4 +49,8 @@ Eigen::Vector3d Light::get_pos(){
 
 Eigen::Vector3d Light::get_color(){
     return light_color;
+}
+
+int Light::get_lighting_group(){
+    return lighting_group;
 }

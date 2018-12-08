@@ -31,9 +31,9 @@ class Scene {
 
         // Methods to render image
         void shoot_rays();
-        void ray_trace(Ray& ray, Eigen::Vector3d& accum, Eigen::Vector3d& ampl, int level);
+        void ray_trace(Ray& ray, Eigen::Vector3d& accum, Eigen::Vector3d& ampl, int level, double &t_value, double&t_value_tot);
         double find_intersection(Ray& ray, SceneObject*& md, Eigen::Vector3d &hit_normal);
-        Eigen::Vector3d calculate_color(Ray& ray, double t_value, SceneObject* hit_obj, Eigen::Vector3d &hit_normal, Eigen::Vector3d &accum, Eigen::Vector3d &ampl, int level);
+        Eigen::Vector3d calculate_color(Ray& ray, double &t_value, SceneObject* hit_obj, Eigen::Vector3d &hit_normal, Eigen::Vector3d &accum, Eigen::Vector3d &ampl, int level);
         bool lightReachesObject(Light& light, Eigen::Vector3d intersect_pos);
 
         std::string orig_driver_file = "";

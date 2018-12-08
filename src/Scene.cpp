@@ -63,6 +63,8 @@ void Scene::edit_camera(std::string driver_line){
     std::string bounds = "bounds";
     std::string res = "res";
     std::string recursion = "recursionLevel";
+    std::string focus_blur = "focus_blur";
+    std::string anti_alias = "anti_alias";
     std::stringstream d_line(driver_line);
 
     std::string line_type;
@@ -86,7 +88,14 @@ void Scene::edit_camera(std::string driver_line){
     }else if(!driver_line.compare(0, res.size(), res)){
         d_line >> d1 >> d2;
         scene_camera.set_resolution(d1, d2);
-        destination_image = Image(d1, d2);
+        destination_image.set_dimensions(d1, d2);
+    }else if(!driver_line.compare(0, focus_blur.size(), focus_blur)){
+        d_line >> d1 >> d2 >> d3;
+        destination_image.set_focus_blur(d1, d2, d3);
+    }else if(!driver_line.compare(0, anti_alias.size(), anti_alias)){
+          d_line >> d1;
+          scene_camera.set_anti_alias(d1);
+          destination_image.set_anti_alias(d1);
     }else if(!driver_line.compare(0, recursion.size(), recursion)){
         d_line >> recursion_level;
     }
@@ -130,11 +139,13 @@ void Scene::add_light(std::string driver_line){
 void Scene::shoot_rays(){
     Eigen::Vector3d ray_pt, ray_dir, color, ampl;
     Ray ray;
+    double t_value = 0;
+    double t_value_total = 0;
 
     std::cout << "starting ray tracing" << "\n";
     for (int i=0; i<scene_camera.pixel_width; i++){
         if (! (i%64)){
-            std::cout << "Row: " << i << " / " << scene_camera.pixel_height << "\n";
+            std::cout << "Row: " << i << " / " << scene_camera.pixel_width << "\n";
         }
         for (int j=0; j<scene_camera.pixel_height; j++){
             ray_pt = scene_camera.get_pixel_position(i, j);
@@ -142,21 +153,26 @@ void Scene::shoot_rays(){
             ray = Ray(ray_pt, ray_dir);
             color << 0,0,0;
             ampl << 1,1,1;
-            ray_trace(ray, color, ampl, recursion_level);
+            ray_trace(ray, color, ampl, recursion_level, t_value, t_value_total);
             destination_image.write_pixel(i, j, color);
+            destination_image.write_t_value(i, j, t_value);
+            // destination_image.write_t_total(i, j, t_value_total);
         }
      }
      std::cout << "end of ray tracing \n";
 }
 
-void Scene::ray_trace(Ray& ray, Eigen::Vector3d& accum, Eigen::Vector3d& ampl, int level){
+void Scene::ray_trace(Ray& ray, Eigen::Vector3d& accum, Eigen::Vector3d& ampl, int level, double &t_value, double&t_value_tot){
     if (scene_objects.size() == 0){
         return;
     }
     SceneObject* hit_obj = scene_objects[0];
     Eigen::Vector3d hit_normal;
-    double t_value = find_intersection(ray, hit_obj, hit_normal);
-    calculate_color(ray, t_value, hit_obj, hit_normal, accum, ampl, level);
+    t_value = find_intersection(ray, hit_obj, hit_normal);
+    double reflect_t_values = t_value;
+    calculate_color(ray, reflect_t_values, hit_obj, hit_normal, accum, ampl, level);
+    // Calculate color will set reflect_t_values to 0 if no reflection or refraction is done
+    t_value_tot = t_value + reflect_t_values;
 }
 
 double Scene::find_intersection(Ray& ray, SceneObject*& md, Eigen::Vector3d &hit_normal){
@@ -177,7 +193,7 @@ double Scene::find_intersection(Ray& ray, SceneObject*& md, Eigen::Vector3d &hit
     return intersect_t;
 }
 
-Eigen::Vector3d Scene::calculate_color(Ray& ray, double t_value, SceneObject* hit_obj, Eigen::Vector3d &hit_normal, Eigen::Vector3d &accum, Eigen::Vector3d &ampl, int level){
+Eigen::Vector3d Scene::calculate_color(Ray& ray, double &t_value, SceneObject* hit_obj, Eigen::Vector3d &hit_normal, Eigen::Vector3d &accum, Eigen::Vector3d &ampl, int level){
     Eigen::Vector3d vector_to_light, intersect_pos, dif_refl, color;
     Eigen::Vector3d obj_intsct_vector, light_reflect_point;
     if (t_value == MISSED_T_VALUE){
@@ -187,7 +203,12 @@ Eigen::Vector3d Scene::calculate_color(Ray& ray, double t_value, SceneObject* hi
     color = hit_obj->get_ambient_color() * ambient;
     double light_concentration, proximity_reflection;
     intersect_pos = ray.get_point() + t_value * ray.get_dir();
+    // Set t_value to zero so that it can return t_value total from refraction and reflection
+    t_value = 0;
     for(Light light:scene_lights){
+        if (light.get_lighting_group() != hit_obj->get_lighting_group()){
+            continue;
+        }
         if (!lightReachesObject(light, intersect_pos)){
             continue;
         }
@@ -213,25 +234,33 @@ Eigen::Vector3d Scene::calculate_color(Ray& ray, double t_value, SceneObject* hi
 
     }
     accum = accum + ampl.cwiseProduct(color);
-    
+
     Eigen::Vector3d kr_ampl = hit_obj->get_kr() * ampl;
     Eigen::Matrix3d ko = hit_obj->get_ko();
     double opacity = (ko * Eigen::Vector3d(1,1,1)).dot(Eigen::Vector3d(1,1,1));
+    // Reflections
     if (level > 0){
+        double first_t = 0;
+        double total_t = 0;
         Eigen::Vector3d reflect_accum = Eigen::Vector3d::Zero();
         Eigen::Vector3d w = -1 * ray.get_dir();
         Eigen::Vector3d ray_dir = (2 * hit_normal.dot(w) * hit_normal - w).normalized();
         Ray reflect_ray = Ray(intersect_pos, ray_dir);
-        ray_trace(reflect_ray, reflect_accum, kr_ampl, --level);
+        ray_trace(reflect_ray, reflect_accum, kr_ampl, --level, first_t, total_t);
         Eigen::Vector3d reflect_ampl = ko * ampl;
         accum = accum + reflect_ampl.cwiseProduct(reflect_accum);
+        if (total_t < MISSED_T_VALUE) t_value += total_t;
     }
+    // Calculate refraction
     if (level > 0 && opacity < 3.0){
+        double first_t = 0;
+        double total_t = 0;
         Eigen::Vector3d refract_accum = Eigen::Vector3d::Zero();
         Ray refract_ray = hit_obj->get_refracted_ray(ray, intersect_pos, hit_normal);
-        ray_trace(refract_ray, refract_accum, kr_ampl, --level);
+        ray_trace(refract_ray, refract_accum, kr_ampl, --level, first_t, total_t);
         Eigen::Vector3d refract_ampl = (Eigen::Matrix3d::Identity() - ko) * ampl;
         accum = accum + refract_ampl.cwiseProduct(refract_accum);
+        if (total_t < MISSED_T_VALUE) t_value += total_t;
     }
     return color;
 }

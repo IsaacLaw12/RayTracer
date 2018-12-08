@@ -17,10 +17,11 @@ class Light {
         bool light_valid();
         Eigen::Vector3d get_pos();
         Eigen::Vector3d get_color();
+        int get_lighting_group();
 
   private:
       void assign_values(double spec_nums[]);
-
+      int lighting_group = 0;
       double w_value;
       Eigen::Vector3d light_pos;
       Eigen::Vector3d light_color;
