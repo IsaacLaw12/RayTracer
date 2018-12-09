@@ -72,10 +72,10 @@ void Model::map_vertices_faces(){
 void Model::on_model_load(){
     calculate_face_normals();
     int recursion_depth = 10;
+    std::cout << "Building octtree\n";
     bounding_box = new BoundingBox(Vertices, Faces, recursion_depth);
     calculate_vertex_normals();
 }
-
 
 void Model::add_vertex(double vx, double vy, double vz){
     int num_cols = Vertices.cols();
@@ -332,21 +332,21 @@ void Model::load_material(std::string material_file){
             diffuse_color(1, 1) = k2;
             diffuse_color(2, 2) = k3;
         }
-        
+
         if (line_type[0] == 'K' && line_type[1] == 's'){
             obj_read >> k1 >> k2 >> k3;
             specular_color(0, 0) = k1;
             specular_color(1, 1) = k2;
             specular_color(2, 2) = k3;
         }
-        
+
         if (line_type[0] == 'K' && line_type[1] == 'o'){
             obj_read >> k1 >> k2 >> k3;
             refract_color(0, 0) = k1;
             refract_color(1, 1) = k2;
             refract_color(2, 2) = k3;
         }
-        
+
         if (line_type[0] == 'e'){
             if (line_type[1] == 't'){
                 if (line_type[2] == 'a'){

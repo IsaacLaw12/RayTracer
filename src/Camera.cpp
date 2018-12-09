@@ -29,8 +29,13 @@ void Camera::set_bounds(double x1, double y1, double x2, double y2){
  }
 
 void Camera::set_resolution(int width, int height){
-    pixel_width = width;
-    pixel_height = height;
+    pixel_width = width * (anti_alias + 1);
+    pixel_height = height * (anti_alias + 1);
+}
+
+void Camera::set_anti_alias(int aa_level){
+    anti_alias = aa_level;
+    set_resolution(pixel_width, pixel_height);
 }
 
 void Camera::calculate_axis(){

@@ -31,7 +31,7 @@ class Scene {
 
         // Methods to render image
         void shoot_rays();
-        void ray_trace(Ray& ray, Eigen::Vector3d& accum, Eigen::Vector3d& ampl, int level);
+        void ray_trace(Ray& ray, Eigen::Vector3d& accum, Eigen::Vector3d& ampl, int level, double &t_value);
         double find_intersection(Ray& ray, SceneObject*& md, Eigen::Vector3d &hit_normal);
         Eigen::Vector3d calculate_color(Ray& ray, double t_value, SceneObject* hit_obj, Eigen::Vector3d &hit_normal, Eigen::Vector3d &accum, Eigen::Vector3d &ampl, int level);
         bool lightReachesObject(Light& light, Eigen::Vector3d intersect_pos);
@@ -40,8 +40,6 @@ class Scene {
         Camera scene_camera;
         Image destination_image = Image(0, 0);
         std::vector<SceneObject*> scene_objects;
-        //std::vector<Model*> scene_models;
-        //std::vector<Sphere*> scene_spheres;
         std::vector<Light> scene_lights;
         Eigen::Vector3d ambient;
 
