@@ -7,7 +7,6 @@ void Image::set_dimensions(int width, int height){
   int scale = anti_alias + 1;
   image_width = width * scale;
   image_height = height * scale;
-  std::cout << "image_width: " << image_width << "\n";
   red_pixels = Eigen::MatrixXd();
   green_pixels = Eigen::MatrixXd();
   blue_pixels = Eigen::MatrixXd();
@@ -16,9 +15,7 @@ void Image::set_dimensions(int width, int height){
   blue_pixels.conservativeResize(image_width, image_height);
 
   t_values = Eigen::MatrixXd();
-  total_t_values = Eigen::MatrixXd();
   t_values.conservativeResize(image_width, image_height);
-  total_t_values.conservativeResize(image_width, image_height);
 }
 
 void Image::write_pixel(int index_x, int index_y, Eigen::Vector3d rgb){
@@ -33,28 +30,15 @@ void Image::write_t_value(int index_x, int index_y, double t_value){
     t_values(index_x, index_y) = t_value;
 }
 
-void Image::write_t_total(int index_x, int index_y, double t_value_total){
-    // This keeps track of the total distance of raytracing each pixel received
-    //     it should be possible to process this information into a edge detection
-    //     anti-aliasing function
-    total_t_values(index_x, index_y) = t_value_total;
-}
-
-void Image::prep_post_arrays(){
-    post_red_pixels = Eigen::MatrixXd(red_pixels);
-    post_green_pixels = Eigen::MatrixXd(green_pixels);
-    post_blue_pixels = Eigen::MatrixXd(blue_pixels);
-}
-
 void Image::save_image(std::string file_name){
     std::ofstream output(file_name);
-    prep_post_arrays();
 
     if (focus_blur){
         // Blur the rgb matrices based on their distance t_values
         std::cout << "Adding focus blur\n";
         apply_focus_blur();
     }
+
     if (anti_alias > 0){
         std::cout << "Anti-aliasing image\n";
         apply_anti_alias();
@@ -65,9 +49,9 @@ void Image::save_image(std::string file_name){
     int red, green, blue;
     for (int i=image_height-1;i>=0; i--){
         for (int j=0; j<image_width; j++){
-            red = convert_255(post_red_pixels(j, i));
-            green = convert_255(post_green_pixels(j, i));
-            blue = convert_255(post_blue_pixels(j, i));
+            red = convert_255(red_pixels(j, i));
+            green = convert_255(green_pixels(j, i));
+            blue = convert_255(blue_pixels(j, i));
             output << red << " " << green << " " << blue << " ";
         }
         output << "\n";
@@ -95,35 +79,42 @@ int Image::convert_255(double value){
 }
 
 void Image::apply_focus_blur(){
+    post_red_pixels = Eigen::MatrixXd(red_pixels);
+    post_green_pixels = Eigen::MatrixXd(green_pixels);
+    post_blue_pixels = Eigen::MatrixXd(blue_pixels);
+
     for (int x=0; x<image_width; x++){
         for (int y=0; y<image_height; y++){
             int blur = get_pixel_blur(x, y);
             blur_pixel(x, y, blur);
         }
     }
+    red_pixels = Eigen::MatrixXd(post_red_pixels);
+    green_pixels = Eigen::MatrixXd(post_green_pixels);
+    blue_pixels = Eigen::MatrixXd(post_blue_pixels);
 }
 
 void Image::apply_anti_alias(){
     std::vector<Eigen::MatrixXd*> image;
-    image.push_back(&post_red_pixels);
-    image.push_back(&post_green_pixels);
-    image.push_back(&post_blue_pixels);
+    image.push_back(&red_pixels);
+    image.push_back(&green_pixels);
+    image.push_back(&blue_pixels);
 
     int scale = anti_alias + 1;
     int new_width = image_width / scale;
     int new_height = image_height / scale;
 
-    Eigen::MatrixXd temp = Eigen::MatrixXd();
-    temp.resize(new_width, new_height);
+    Eigen::MatrixXd scaled_down = Eigen::MatrixXd();
+    scaled_down.resize(new_width, new_height);
     for (Eigen::MatrixXd* cur: image){
         for (int x=0; x<new_width; x++){
             for (int y=0; y<new_height; y++){
-                temp(x, y) = get_anti_alias_val(x, y, scale, cur);
+                scaled_down(x, y) = get_anti_alias_val(x, y, scale, cur);
             }
         }
         // Assign scaled down values to image
         cur->resize(new_width, new_height);
-        *cur = Eigen::MatrixXd(temp);
+        *cur = Eigen::MatrixXd(scaled_down);
     }
 
     image_width = new_width;
@@ -159,6 +150,8 @@ int Image::get_pixel_blur(int index_x, int index_y){
 }
 
 void Image::blur_pixel(int index_x, int index_y, int blur_size){
+    // Original color matrices are not affected. Their blurred averages are
+    //     written to post_* matrices
     double red_avg = 0;
     double green_avg = 0;
     double blue_avg = 0;

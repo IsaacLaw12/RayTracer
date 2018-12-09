@@ -36,13 +36,12 @@ class Model: public SceneObject {
   private:
         friend class BoundingBox;
         void load_model();
-        void set_matrices(std::ifstream &in);
         void map_vertices_faces();
         void on_model_load();
         void load_material(std::string material_file);
 
-        void add_vertex(double vx, double vy, double vz, int vertex_num);
-        void add_face(int v1, int v2, int v3, int face_num);
+        void add_vertex(double vx, double vy, double vz);
+        void add_face(int v1, int v2, int v3);
         void add_face_normal(Eigen::Vector3d face_normal);
 
         void calc_vertex_normal(int vertex_num, const Eigen::Vector3d& original_face, Eigen::Vector3d& average);

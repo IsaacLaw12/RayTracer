@@ -140,7 +140,6 @@ void Scene::shoot_rays(){
     Eigen::Vector3d ray_pt, ray_dir, color, ampl;
     Ray ray;
     double t_value = 0;
-    double t_value_total = 0;
 
     std::cout << "starting ray tracing" << "\n";
     for (int i=0; i<scene_camera.pixel_width; i++){
@@ -153,26 +152,22 @@ void Scene::shoot_rays(){
             ray = Ray(ray_pt, ray_dir);
             color << 0,0,0;
             ampl << 1,1,1;
-            ray_trace(ray, color, ampl, recursion_level, t_value, t_value_total);
+            ray_trace(ray, color, ampl, recursion_level, t_value);
             destination_image.write_pixel(i, j, color);
             destination_image.write_t_value(i, j, t_value);
-            // destination_image.write_t_total(i, j, t_value_total);
         }
      }
      std::cout << "end of ray tracing \n";
 }
 
-void Scene::ray_trace(Ray& ray, Eigen::Vector3d& accum, Eigen::Vector3d& ampl, int level, double &t_value, double&t_value_tot){
+void Scene::ray_trace(Ray& ray, Eigen::Vector3d& accum, Eigen::Vector3d& ampl, int level, double &t_value){
     if (scene_objects.size() == 0){
         return;
     }
     SceneObject* hit_obj = scene_objects[0];
     Eigen::Vector3d hit_normal;
     t_value = find_intersection(ray, hit_obj, hit_normal);
-    double reflect_t_values = t_value;
-    calculate_color(ray, reflect_t_values, hit_obj, hit_normal, accum, ampl, level);
-    // Calculate color will set reflect_t_values to 0 if no reflection or refraction is done
-    t_value_tot = t_value + reflect_t_values;
+    calculate_color(ray, t_value, hit_obj, hit_normal, accum, ampl, level);
 }
 
 double Scene::find_intersection(Ray& ray, SceneObject*& md, Eigen::Vector3d &hit_normal){
@@ -193,7 +188,7 @@ double Scene::find_intersection(Ray& ray, SceneObject*& md, Eigen::Vector3d &hit
     return intersect_t;
 }
 
-Eigen::Vector3d Scene::calculate_color(Ray& ray, double &t_value, SceneObject* hit_obj, Eigen::Vector3d &hit_normal, Eigen::Vector3d &accum, Eigen::Vector3d &ampl, int level){
+Eigen::Vector3d Scene::calculate_color(Ray& ray, double t_value, SceneObject* hit_obj, Eigen::Vector3d &hit_normal, Eigen::Vector3d &accum, Eigen::Vector3d &ampl, int level){
     Eigen::Vector3d vector_to_light, intersect_pos, dif_refl, color;
     Eigen::Vector3d obj_intsct_vector, light_reflect_point;
     if (t_value == MISSED_T_VALUE){
@@ -238,29 +233,24 @@ Eigen::Vector3d Scene::calculate_color(Ray& ray, double &t_value, SceneObject* h
     Eigen::Vector3d kr_ampl = hit_obj->get_kr() * ampl;
     Eigen::Matrix3d ko = hit_obj->get_ko();
     double opacity = (ko * Eigen::Vector3d(1,1,1)).dot(Eigen::Vector3d(1,1,1));
+    double dummy_t = 0;
     // Reflections
     if (level > 0){
-        double first_t = 0;
-        double total_t = 0;
         Eigen::Vector3d reflect_accum = Eigen::Vector3d::Zero();
         Eigen::Vector3d w = -1 * ray.get_dir();
         Eigen::Vector3d ray_dir = (2 * hit_normal.dot(w) * hit_normal - w).normalized();
         Ray reflect_ray = Ray(intersect_pos, ray_dir);
-        ray_trace(reflect_ray, reflect_accum, kr_ampl, --level, first_t, total_t);
+        ray_trace(reflect_ray, reflect_accum, kr_ampl, --level, dummy_t);
         Eigen::Vector3d reflect_ampl = ko * ampl;
         accum = accum + reflect_ampl.cwiseProduct(reflect_accum);
-        if (total_t < MISSED_T_VALUE) t_value += total_t;
     }
     // Calculate refraction
     if (level > 0 && opacity < 3.0){
-        double first_t = 0;
-        double total_t = 0;
         Eigen::Vector3d refract_accum = Eigen::Vector3d::Zero();
         Ray refract_ray = hit_obj->get_refracted_ray(ray, intersect_pos, hit_normal);
-        ray_trace(refract_ray, refract_accum, kr_ampl, --level, first_t, total_t);
+        ray_trace(refract_ray, refract_accum, kr_ampl, --level, dummy_t);
         Eigen::Vector3d refract_ampl = (Eigen::Matrix3d::Identity() - ko) * ampl;
         accum = accum + refract_ampl.cwiseProduct(refract_accum);
-        if (total_t < MISSED_T_VALUE) t_value += total_t;
     }
     return color;
 }
