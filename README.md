@@ -8,7 +8,8 @@
 ## These were the original requirements:
 * To run:
   * make
-  * ./raytracer driver_file.txt output_image.ppm
+  * Ensure the necessary scene, object and material files are in the current directory
+  * ./raytracer &nbsp;driver_file.txt &nbsp;output_image.ppm
 * Read from the driver_file.txt (format is explained in scene_driver.md):
   * Camera specifications
   * Image specifications
@@ -16,8 +17,8 @@
   * Sphere location and color
   * Model position, rotation, and scale
  * Raytrace the scene. For every pixel:
-   * Calculate Ray - Object intersections
-   * Calculate color based off of the colors of the intersected object and visible lights
+   * Find ray-object intersections, keep the closest intersected object
+   * Calculate pixel color based off of the colors of the intersected object and non-occluded lights
    * Recursively find reflections if the object has specularity
    * Recursively find refraction if the object has transparency
  * Save the image:
