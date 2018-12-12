@@ -1,7 +1,7 @@
 ## RayTracer
 
-### Final class submission:
-![alt text](https://i.imgur.com/uNnLggh.png)
+![A fisher, outlined against the setting sun, reflections bouncing across the water](https://i.imgur.com/uNnLggh.png)
+"__Night Fisher__" - *Scene created for final project and rendered with Raytracer in 4k*
 
 ### Raytracer started as a project for my computer graphics class.
 
