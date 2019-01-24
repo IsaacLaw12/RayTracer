@@ -74,6 +74,10 @@ void Image::set_anti_alias(int aa_level){
 
 int Image::convert_255(double value){
     // Convert a 0-1 double value to 0-255 int value
+    if (value > 1)
+        value = 1;
+    if (value < 0)
+        value = 0;
     value = value * 255.0;
     return int(value);
 }
