@@ -20,7 +20,7 @@ Transformation::Transformation(std::string driver_string){
     }
     if (counter != 8){
         // The correct transform numbers were not found
-        std::cout << "WRONG NUBERS FOUND" << "\n";
+        std::cout << "WRONG NUMBERS OF MODEL ATTRIBUTES FOUND" << "\n";
         load_successful = false;
         return;
     }
@@ -32,7 +32,7 @@ Transformation::Transformation(std::string driver_string){
     driver >> model_file_name;
 
     if (model_file_name.size() == 0){
-        // Attempt to make program backwards compatible with older driver files
+        // If 'smooth' wasn't specified then the model_file_name was actually place in the smoothing variable
         model_file_name = smoothing;
     }
 

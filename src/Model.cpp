@@ -19,7 +19,7 @@ Model::Model(){}
 void Model::load_model(){
     std::ifstream in(original_file);
     if (!in){
-        //std::cerr << "Could not open " << original_file << std::endl;
+        std::cerr << "Could not open " << original_file << std::endl;
         load_successful = false;
         return;
     }
@@ -96,6 +96,9 @@ void Model::add_face_normal(Eigen::Vector3d face_normal){
 }
 
 void Model::calculate_face_normals(){
+    /*
+      Calculate the normal for each face by taking the cross product of two of the triangle's sides
+    */
     FaceNormals = Eigen::MatrixXd();
     Eigen::Vector3d first_vertex, second_vertex, third_vertex;
     Eigen::Vector3d first_vector, second_vector;
@@ -112,18 +115,20 @@ void Model::calculate_face_normals(){
 }
 
 void Model::calculate_vertex_normals(){
-    // Assumes that calculate_face_normals was called first
+    /* Assumes that calculate_face_normals was called first
+      For every face calculate and store the vertex normal for its three vertices
+    */
     int num_vert_norms = Faces.cols()*3;
     std::vector<Eigen::Vector3d> temp(num_vert_norms);
     vertex_normals = temp;
     Eigen::Vector3d original, average;
-    for (int i=0; i<Faces.cols(); i++){
-        original = get_face_normal(i);
+    for (int face_num=0; face_num<Faces.cols(); face_num++){
+        original = get_face_normal(face_num);
         for (int f_vert=0; f_vert<3; f_vert++){
-            int vertex_num = Faces(f_vert, i);
-            average = get_face_normal(i);
+            int vertex_num = Faces(f_vert, face_num);
+            average = get_face_normal(face_num);
             calc_vertex_normal(vertex_num, original, average);
-            vertex_normals[3*i + f_vert] = average;
+            vertex_normals[3*face_num + f_vert] = average;
         }
     }
 }
