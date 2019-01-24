@@ -17,7 +17,6 @@ BoundingBox::BoundingBox(Eigen::MatrixXd& verts, Eigen::MatrixXi& faces, int rec
     center = (max_corner-min_corner) / 2 + min_corner;
     // The first box should surround the entire model, so all faces are passed.
     for(int i=0;i<Faces.cols();i++){
-        parent_faces.insert(i);
         contained_faces.insert(i);
     }
     subdivide_box();
@@ -31,12 +30,11 @@ BoundingBox::BoundingBox(BoundingBox* parent_bb, int recursionLimit, Eigen::Vect
     min_corner = min;
     max_corner = max;
     center = (max-min) / 2 + min;
-    parent_faces = parent_bb->contained_faces;
-    find_contained_faces();
+    find_contained_faces(parent_bb->contained_faces);
     subdivide_box();
 }
 
-void BoundingBox::find_contained_faces(){
+void BoundingBox::find_contained_faces(std::set<int> &parent_faces){
     Eigen::Vector3d point_a, point_b, point_c;
     for(auto face_num: parent_faces){
         point_a = get_vertex( Faces(0, face_num) - 1 );
