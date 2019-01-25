@@ -10,7 +10,6 @@ Transformation::Transformation(std::string driver_string){
     std::stringstream driver(driver_string);
     double transform_floats[8] = {};
     std::string driver_type = "";
-    std::string smoothing = "";
     driver >> driver_type;
 
     double temp = 0;
@@ -29,17 +28,12 @@ Transformation::Transformation(std::string driver_string){
 
     driver.clear();
     driver >> smoothing;
-    driver >> model_file_name;
+    driver >> asset_name;
 
-    if (model_file_name.size() == 0){
-        // If 'smooth' wasn't specified then the model_file_name was actually place in the smoothing variable
-        model_file_name = smoothing;
-    }
-
-    target_model = new Model(model_file_name, smoothing);
-    if (!target_model->model_loaded()){
-        std::cout << "MODEL NOT LOADED" << "\n";
-        load_successful = false;
+    if (asset_name.size() == 0){
+        // This makes the program background compatible with driver files that don't contain "smooth" or "flat"
+        // If 'smooth' wasn't specified then the asset_name was actually place in the smoothing variable
+        asset_name = smoothing;
     }
 }
 
@@ -100,19 +94,16 @@ void Transformation::generate_transform_matrix(){
     final_matrix = translate_matrix * scale_matrix * normalize_transpose * rotate_matrix * normalize_z_rotate ;
 }
 
-void Transformation::transform_object(){
-    Eigen::MatrixXd temp = final_matrix * target_model->get_vertices();
-    target_model->save_vertices( temp );
+void Transformation::transform_object(Model* new_model){
+
+    Eigen::MatrixXd temp = final_matrix * new_model->get_vertices();
+    new_model->save_vertices( temp );
 }
 
-std::string Transformation::get_model_file_name(){
-    return model_file_name;
+std::string Transformation::get_asset_name(){
+    return asset_name;
 }
 
 bool Transformation::transform_loaded(){
     return load_successful;
-}
-
-Model* Transformation::get_model(){
-    return target_model;
 }

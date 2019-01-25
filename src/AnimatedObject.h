@@ -12,9 +12,20 @@
 
 class AnimatedObject {
     public:
+        AnimatedObject(std::string driver_line);
         void set_object(SceneObject* new_obj);
-    protected:
+        void advance_frame();
+        bool has_next_frame();
+    private:
+        struct path_leaf_string;
+        void read_directory(const std::string& name, stringvec& v);
+
         std::string directory_name;
+        std::vector<std::string> model_files;
         SceneObject* current_obj;
+
+        Transformation* model_to_scene;
+
+        int current_model = 0;
 };
 #endif

@@ -34,6 +34,26 @@ int Scene::get_recursion(){
     return recursion_level;
 }
 
+bool Scene::advance_frame(){
+    // Call to make the necessary changes to the scene before rendering the next frame
+    if (has_next_frame()){
+        scene_objects.clear();
+        current_frame++;
+        for (auto ao:animated_objects){
+            ao.advance_frame();
+            scene_objects.push_back(ao.get_object());
+        }
+        return true;
+    } else{
+        return false;
+    }
+}
+
+bool Scene::has_next_frame(){
+    // current_frame is 1 based. That means a current_frame of 0 needs to be incremented before using.
+    return (current_frame < frames);
+}
+
 void Scene::load_scene(){
     std::ifstream in(orig_driver_file);
     std::string driver_line;
@@ -131,13 +151,11 @@ void Scene::edit_ambient(std::string driver_line){
 }
 
 void Scene::add_model(std::string driver_line){
-    Transformation tf(driver_line);
-    if (tf.transform_loaded()){
-        tf.transform_object();
-        SceneObject* mod = tf.get_model();
-        scene_objects.push_back(mod);
+    AnimatedObject ao(driver_line);
+    if (ao.load_successful()){
+        animated_objects.push_back(ao);
     } else{
-        std::cout << "Unable to extract transformation and object from " << driver_line << "\n";
+        std::cout << "Adding model failed from " << driver_line << "\n";
     }
 }
 

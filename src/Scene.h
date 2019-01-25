@@ -17,13 +17,14 @@
 class Scene {
   public:
         Scene(std::string driver_file);
-        void render_image(std::string save_image_file);
         Eigen::Vector3d& get_ambient();
         std::vector<SceneObject*>& get_objects();
         Camera& get_camera();
         Image& get_image();
         std::vector<Light>& get_lights();
         int get_recursion();
+        bool advance_frame();
+        bool has_next_frame();
   private:
         // Methods to help load the scene
         void load_scene();
@@ -35,20 +36,16 @@ class Scene {
         void add_sphere(std::string driver_line);
         void add_light(std::string driver_line);
 
-        // Methods to render image
-        // void shoot_rays();
-        // void ray_trace(Ray& ray, Eigen::Vector3d& accum, Eigen::Vector3d& ampl, int level, double &t_value);
-        // double find_intersection(Ray& ray, SceneObject*& md, Eigen::Vector3d &hit_normal);
-        // Eigen::Vector3d calculate_color(Ray& ray, double t_value, SceneObject* hit_obj, Eigen::Vector3d &hit_normal, Eigen::Vector3d &accum, Eigen::Vector3d &ampl, int level);
-        // bool lightReachesObject(Light& light, Eigen::Vector3d intersect_pos);
-
         std::string orig_driver_file = "";
         Camera scene_camera;
         Image destination_image = Image(0, 0);
         std::vector<SceneObject*> scene_objects;
+        std::vector<AnimatedObject*> animated_objects;
         std::vector<Light> scene_lights;
         Eigen::Vector3d ambient;
 
+        int frames = 1;
+        int current_frame = 0;
         int recursion_level = 0;
 };
 #endif
