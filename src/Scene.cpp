@@ -40,8 +40,8 @@ bool Scene::advance_frame(){
         scene_objects.clear();
         current_frame++;
         for (auto ao:animated_objects){
-            ao.advance_frame();
-            scene_objects.push_back(ao.get_object());
+            ao->advance_frame();
+            scene_objects.push_back(ao->get_object());
         }
         return true;
     } else{
@@ -80,8 +80,6 @@ void Scene::load_scene(){
     scene_camera.calculate_axis();
     in.close();
 }
-
-
 
 bool Scene::valid_driver_line(std::string driver_line){
     bool is_valid = true;
@@ -151,12 +149,8 @@ void Scene::edit_ambient(std::string driver_line){
 }
 
 void Scene::add_model(std::string driver_line){
-    AnimatedObject ao(driver_line);
-    if (ao.load_successful()){
-        animated_objects.push_back(ao);
-    } else{
-        std::cout << "Adding model failed from " << driver_line << "\n";
-    }
+    AnimatedObject* ao = new AnimatedObject(driver_line);
+    animated_objects.push_back(ao);
 }
 
 void Scene::add_sphere(std::string driver_line){

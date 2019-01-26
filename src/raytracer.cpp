@@ -10,6 +10,7 @@ int main(int argc, char*argv[]){
     std::string driver_file = argv[1];
     std::string save_image_file = argv[2];
     Scene sc(driver_file);
+    sc.advance_frame();
     RenderImage ri = RenderImage(&sc);
     ri.render_image(save_image_file);
 

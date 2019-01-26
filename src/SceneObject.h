@@ -25,6 +25,7 @@ class SceneObject {
         Eigen::Matrix3d get_kr();
         Eigen::Matrix3d get_ko();
         int get_lighting_group();
+        bool model_loaded();
     protected:
         double phong = 16;
         double eta = 1;

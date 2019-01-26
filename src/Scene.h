@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include "AnimatedObject.h"
 #include "Model.h"
 #include "Transformation.h"
 #include "Camera.h"
