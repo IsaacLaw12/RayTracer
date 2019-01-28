@@ -29,12 +29,7 @@ Transformation::Transformation(std::string driver_string){
     driver.clear();
     driver >> smoothing;
     driver >> asset_name;
-
-    if (asset_name.size() == 0){
-        // This makes the program background compatible with driver files that don't contain "smooth" or "flat"
-        // If 'smooth' wasn't specified then the asset_name was actually place in the smoothing variable
-        asset_name = smoothing;
-    }
+    driver >> lighting_group;
 }
 
 void Transformation::create_transform_matrix(double transform_string[]){
@@ -102,6 +97,14 @@ void Transformation::transform_object(Model* new_model){
 
 std::string Transformation::get_asset_name(){
     return asset_name;
+}
+
+std::string Transformation::get_smoothing(){
+    return smoothing;
+}
+
+int Transformation::get_lighting_group(){
+    return lighting_group;
 }
 
 bool Transformation::transform_loaded(){

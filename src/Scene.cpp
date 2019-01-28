@@ -43,6 +43,9 @@ bool Scene::advance_frame(){
             ao->advance_frame();
             scene_objects.push_back(ao->get_object());
         }
+        for (auto ss:scene_spheres){
+            scene_objects.push_back(ss);
+        }
         return true;
     } else{
         return false;
@@ -51,7 +54,7 @@ bool Scene::advance_frame(){
 
 bool Scene::has_next_frame(){
     // current_frame is 1 based. That means a current_frame of 0 needs to be incremented before using.
-    return (current_frame < frames);
+    return (current_frame < number_frames);
 }
 
 void Scene::load_scene(){
@@ -100,6 +103,7 @@ void Scene::edit_camera(std::string driver_line){
     std::string focal_length = "d";
     std::string bounds = "bounds";
     std::string res = "res";
+    std::string frames = "frames";
     std::string recursion = "recursionLevel";
     std::string focus_blur = "focus_blur";
     std::string anti_alias = "anti_alias";
@@ -136,6 +140,11 @@ void Scene::edit_camera(std::string driver_line){
           destination_image.set_anti_alias(d1);
     }else if(!driver_line.compare(0, recursion.size(), recursion)){
         d_line >> recursion_level;
+    }else if(!driver_line.compare(0, frames.size(), frames)) {
+        d_line >> number_frames;
+        if (number_frames < 1){
+            number_frames = 1;
+        }
     }
 }
 
@@ -154,13 +163,8 @@ void Scene::add_model(std::string driver_line){
 }
 
 void Scene::add_sphere(std::string driver_line){
-    SceneObject* sp = new Sphere(driver_line);
-    //if (sp.load_successful()){
-    scene_objects.push_back(sp);
-    std::cout << "There are now: " << scene_objects.size() << " scene objects\n";
-    //} else{
-    //    std::cout << "Unable to create sphere from: " << driver_line << "\n";
-    //}
+    Sphere* sp = new Sphere(driver_line);
+    scene_spheres.push_back(sp);
 }
 
 void Scene::add_light(std::string driver_line){

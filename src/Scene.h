@@ -42,10 +42,11 @@ class Scene {
         Image destination_image = Image(0, 0);
         std::vector<SceneObject*> scene_objects;
         std::vector<AnimatedObject*> animated_objects;
+        std::vector<Sphere*> scene_spheres;
         std::vector<Light> scene_lights;
         Eigen::Vector3d ambient;
 
-        int frames = 1;
+        int number_frames = 1;
         int current_frame = 0;
         int recursion_level = 0;
 };

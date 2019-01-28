@@ -16,6 +16,8 @@ class Transformation {
         Transformation(std::string driver_file);
         void transform_object(Model* new_model);
         std::string get_asset_name();
+        std::string get_smoothing();
+        int get_lighting_group();
         bool transform_loaded();
   private:
         void create_transform_matrix(double transform_string[]);
@@ -31,5 +33,6 @@ class Transformation {
         Eigen::Matrix4d final_matrix = Eigen::Matrix4d::Zero();
         bool load_successful = true;
         std::string smoothing = "";
+        int lighting_group = 0;
 };
 #endif

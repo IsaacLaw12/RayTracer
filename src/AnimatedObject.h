@@ -9,7 +9,8 @@
 #include "Ray.h"
 #include "SceneObject.h"
 #include "Transformation.h"
-#include <boost/filesystem.hpp>
+#include <sys/types.h>
+#include <dirent.h>
 
 class AnimatedObject {
     public:
@@ -19,7 +20,6 @@ class AnimatedObject {
         void advance_frame();
         bool has_next_frame();
     private:
-        struct path_leaf_string;
         void read_directory(const std::string& name, std::vector<std::string>& v);
 
         std::string directory_name;
@@ -28,6 +28,6 @@ class AnimatedObject {
 
         Transformation* model_to_scene;
 
-        int current_model = 0;
+        unsigned current_model = 0;
 };
 #endif

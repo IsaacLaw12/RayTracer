@@ -8,7 +8,6 @@
 
 #include "Ray.h"
 
-
 class SceneObject {
     public:
         virtual double intersect_ray(Ray&, Eigen::Vector3d &)=0;
@@ -16,6 +15,7 @@ class SceneObject {
         Eigen::Vector3d refract_ray(Eigen::Vector3d &w, Eigen::Vector3d &normal, double first_eta, double second_eta);
  //       virtual void get_refract_exit(Eigen::Vector3d &, Eigen::Vector3d &, Eigen::Vector3d &, Eigen::Vector3d&);
 
+        void set_lighting_group(int group_number);
         double get_phong();
         double get_eta();
         Eigen::Matrix3d get_diffuse_color();
