@@ -2,13 +2,33 @@
 #include "Scene.h"
 #include "RenderImage.h"
 
-std::string extract_base_name(std::string original){
+std::string SAVE_FOLDER = "./tmp_renders/";
+
+std::string strip_file_ending(std::string original){
+    std::size_t found = original.find(".");
+    if (found != std::string::npos){
+        original = original.substr(0, found);
+    }
     return original;
 }
 
 void prepare_directory(){
-    system("rmdir -r /tmp/");
-    system("mkdir /tmp/");
+    // Clear the saved render folder of previous contents
+    std::cout << "Removing " << SAVE_FOLDER << " directory\n";
+    char remove_command[80] = "rm -r ";
+    strcat(remove_command, SAVE_FOLDER.c_str());
+    if (0 == system(remove_command)){
+        std::cout << "Directory removal successful\n";
+    }
+
+    std::cout << "Creating " << SAVE_FOLDER << " directory\n";
+    char create_command[80] = "mkdir ";
+    strcat(create_command, SAVE_FOLDER.c_str());
+    if (0 == system(create_command)){
+        std::cout << "Directory creation successful\n";
+    } else{
+        std::cout << "Directory creation failed\n";
+    }
 }
 
 int main(int argc, char*argv[]){
@@ -21,13 +41,14 @@ int main(int argc, char*argv[]){
 
     Scene sc(driver_file);
     prepare_directory();
-    save_image_file = extract_base_name(save_image_file);
+    save_image_file = strip_file_ending(save_image_file);
 
     int frame_num = 0;
     while (sc.advance_frame()){
-        std::string image_name = "/tmp" + save_image_file + std::to_string(frame_num) + ".ppm";
+        std::string image_name = SAVE_FOLDER + save_image_file + std::to_string(frame_num) + ".ppm";
         RenderImage ri = RenderImage(&sc);
         ri.render_image(image_name);
+        frame_num++;
     }
     return 0;
 }

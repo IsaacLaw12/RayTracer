@@ -35,6 +35,7 @@ int Scene::get_recursion(){
 }
 
 bool Scene::advance_frame(){
+    std::cout << "current: " << current_frame << " number of frames: " << number_frames << "\n";
     // Call to make the necessary changes to the scene before rendering the next frame
     if (has_next_frame()){
         scene_objects.clear();

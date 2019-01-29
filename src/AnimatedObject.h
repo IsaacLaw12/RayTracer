@@ -19,10 +19,12 @@ class AnimatedObject {
         SceneObject* get_object();
         void advance_frame();
         bool has_next_frame();
+        std::string get_model_file_name(int model_index);
     private:
         void read_directory(const std::string& name, std::vector<std::string>& v);
+        bool filter_obj_files();
 
-        std::string directory_name;
+        std::string directory_name = "";
         std::vector<std::string> model_files;
         SceneObject* current_obj;
 

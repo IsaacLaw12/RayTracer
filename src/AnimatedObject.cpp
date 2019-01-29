@@ -10,7 +10,26 @@ AnimatedObject::AnimatedObject(std::string driver_line){
     //     assume it is an .obj file if it's not a directory
     if (model_files.size() == 0){
         model_files.push_back(asset_name);
+    } else{
+        directory_name = asset_name;
     }
+    if (!filter_obj_files()){
+        std::cout << "Is not an .obj file or a folder containing .obj files: " << asset_name << "\n";
+    }
+}
+
+bool AnimatedObject::filter_obj_files(){
+    std::vector<std::string> temp_files;
+    std::string obj = ".obj";
+    for (auto mf:model_files){
+        if (mf.length() <= obj.length())
+          continue;
+        if (0 == mf.compare(mf.length() - obj.length(), obj.length(), obj) ){
+            temp_files.push_back(mf);
+        }
+    }
+    model_files = temp_files;
+    return model_files.size() > 0;
 }
 
 void AnimatedObject::read_directory(const std::string& name, std::vector<std::string>& v){
@@ -35,8 +54,9 @@ SceneObject* AnimatedObject::get_object(){
 }
 
 void AnimatedObject::advance_frame(){
+    // Load the next model in the directory if there are any left
     if (has_next_frame()){
-        std::string model_file_name = model_files[current_model];
+        std::string model_file_name = get_model_file_name(current_model);
         current_obj = new Model(model_file_name, model_to_scene->get_smoothing());
         current_obj->set_lighting_group(model_to_scene->get_lighting_group());
         if (!current_obj->model_loaded()){
@@ -47,6 +67,16 @@ void AnimatedObject::advance_frame(){
         }
         current_model++;
     }
+}
+
+std::string AnimatedObject::get_model_file_name(int model_index){
+    // If the .obj asset is contained in a directory append the file name with the directory name
+    std::string temp = "";
+    if (directory_name.length()){
+        temp += directory_name + "/";
+    }
+    temp += model_files[model_index];
+    return temp;
 }
 
 bool AnimatedObject::has_next_frame(){
