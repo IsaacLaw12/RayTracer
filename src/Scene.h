@@ -13,6 +13,7 @@
 #include "Sphere.h"
 #include "SceneObject.h"
 #include "Ray.h"
+#include "WaveObject.h"
 
 
 class Scene {
@@ -34,6 +35,7 @@ class Scene {
         void edit_camera(std::string driver_line);
         void edit_ambient(std::string driver_line);
         void add_model(std::string driver_line);
+        void add_wave(std::string driver_line);
         void add_sphere(std::string driver_line);
         void add_light(std::string driver_line);
 

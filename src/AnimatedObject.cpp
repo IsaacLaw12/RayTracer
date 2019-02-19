@@ -18,6 +18,11 @@ AnimatedObject::AnimatedObject(std::string driver_line){
     }
 }
 
+AnimatedObject::AnimatedObject(){
+  // An empty constructor that children like WaveObject can call
+  return;
+}
+
 bool AnimatedObject::filter_obj_files(){
     std::vector<std::string> temp_files;
     std::string obj = ".obj";
@@ -45,27 +50,28 @@ void AnimatedObject::read_directory(const std::string& name, std::vector<std::st
     }
 }
 
-void AnimatedObject::set_object(SceneObject* new_obj){
+void AnimatedObject::set_object(Model* new_obj){
     current_obj = new_obj;
 }
 
-SceneObject* AnimatedObject::get_object(){
+Model* AnimatedObject::get_object(){
+    std::cout << "returning current obj\n";
     return current_obj;
 }
 
 void AnimatedObject::advance_frame(){
     // Load the next model in the directory if there are any left
     if (has_next_frame()){
-        std::string model_file_name = get_model_file_name(current_model);
+        std::string model_file_name = get_model_file_name(current_frame);
         current_obj = new Model(model_file_name, model_to_scene->get_smoothing());
         current_obj->set_lighting_group(model_to_scene->get_lighting_group());
         if (!current_obj->model_loaded()){
             std::cout << "MODEL NOT LOADED: " << model_file_name << "\n";
         } else{
-            Model* temp = (Model*) current_obj;
-            model_to_scene->transform_object(temp);
+            Model* model_cast = (Model*) current_obj;
+            model_to_scene->transform_object(model_cast);
         }
-        current_model++;
+        current_frame++;
     }
 }
 
@@ -80,5 +86,5 @@ std::string AnimatedObject::get_model_file_name(int model_index){
 }
 
 bool AnimatedObject::has_next_frame(){
-    return ( current_model < model_files.size() );
+    return ( current_frame < model_files.size() );
 }

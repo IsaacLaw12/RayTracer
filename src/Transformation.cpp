@@ -92,7 +92,7 @@ void Transformation::generate_transform_matrix(){
 void Transformation::transform_object(Model* new_model){
 
     Eigen::MatrixXd temp = final_matrix * new_model->get_vertices();
-    new_model->save_vertices( temp );
+    new_model->set_vertices( temp );
 }
 
 std::string Transformation::get_asset_name(){

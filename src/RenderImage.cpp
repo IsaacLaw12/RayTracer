@@ -39,6 +39,8 @@ void RenderImage::ray_trace(Ray& ray, Eigen::Vector3d& accum, Eigen::Vector3d& a
     SceneObject* hit_obj = scene->get_objects()[0];
     Eigen::Vector3d hit_normal;
     t_value = find_intersection(ray, hit_obj, hit_normal);
+    //std::cout << "t-value: " << t_value << "\n";
+
     calculate_color(ray, t_value, hit_obj, hit_normal, accum, ampl, level);
 }
 
@@ -60,12 +62,12 @@ double RenderImage::find_intersection(Ray& ray, SceneObject*& md, Eigen::Vector3
     return intersect_t;
 }
 
-Eigen::Vector3d RenderImage::calculate_color(Ray& ray, double t_value, SceneObject* hit_obj, Eigen::Vector3d &hit_normal, Eigen::Vector3d &accum, Eigen::Vector3d &ampl, int level){
+void RenderImage::calculate_color(Ray& ray, double t_value, SceneObject* hit_obj, Eigen::Vector3d &hit_normal, Eigen::Vector3d &accum, Eigen::Vector3d &ampl, int level){
     Eigen::Vector3d vector_to_light, intersect_pos, dif_refl, color;
     Eigen::Vector3d obj_intsct_vector, light_reflect_point;
     if (t_value == MISSED_T_VALUE){
-        color << 0,0,0;
-        return color;
+        accum << 0,0,0;
+        return;
     }
     color = hit_obj->get_ambient_color() * scene->get_ambient();
     double light_concentration, proximity_reflection;
@@ -123,7 +125,7 @@ Eigen::Vector3d RenderImage::calculate_color(Ray& ray, double t_value, SceneObje
         Eigen::Vector3d refract_ampl = (Eigen::Matrix3d::Identity() - ko) * ampl;
         accum = accum + refract_ampl.cwiseProduct(refract_accum);
     }
-    return color;
+    return;
 }
 
 bool RenderImage::lightReachesObject(Light& light, Eigen::Vector3d intersect_pos){

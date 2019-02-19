@@ -66,6 +66,7 @@ void Scene::load_scene(){
     std::string model = "model";
     std::string ambient = "ambient";
     std::string sphere = "sphere";
+    std::string wave = "wave";
 
     while (std::getline(in, driver_line)){
         if (!driver_line.compare(0, light.size(), light))
@@ -76,6 +77,8 @@ void Scene::load_scene(){
             add_sphere(driver_line);
         else if (!driver_line.compare(0, ambient.size(), ambient))
             edit_ambient(driver_line);
+        else if (!driver_line.compare(0, wave.size(), wave))
+            add_wave(driver_line);
         else if(valid_driver_line(driver_line)){
             // The only other driver lines should be camera specs
             edit_camera(driver_line);
@@ -171,4 +174,22 @@ void Scene::add_sphere(std::string driver_line){
 void Scene::add_light(std::string driver_line){
     Light light(driver_line);
     scene_lights.push_back(light);
+}
+
+void Scene::add_wave(std::string driver_line){
+    // wave  0 0 0   10 0 10    1 0 0   0 0 1  10
+    std::stringstream d_line(driver_line);
+    std::string line_type, material_file;
+    double c1x, c1y, c1z, len_one, len_two, d1x, d1y, d1z, d2x, d2y, d2z, res, height;
+    int num_waves;
+    d_line >>line_type>>c1x>>c1y>>c1z>>len_one>>len_two>>d1x>>d1y>>d1z>>d2x>>d2y>>d2z>>res>>height>>num_waves>>material_file;
+    Eigen::Vector3d corner_one = Eigen::Vector3d(c1x, c1y, c1z);
+    Eigen::Vector3d direction_one = Eigen::Vector3d(d1x, d1y, d1z);
+    Eigen::Vector3d direction_two = Eigen::Vector3d(d2x, d2y, d2z);
+    WaveObject* wo = new WaveObject(corner_one, len_one, len_two, direction_one, direction_two, res, material_file);
+    wo->set_height(height);
+    wo->set_num_waves(num_waves);
+    wo->update_model(0);
+    AnimatedObject* ao = wo;
+    animated_objects.push_back(ao);
 }

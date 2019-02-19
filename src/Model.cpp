@@ -52,7 +52,6 @@ void Model::load_model(){
         }
     }
     in.close();
-    map_vertices_faces();
     on_model_load();
 }
 
@@ -70,6 +69,7 @@ void Model::map_vertices_faces(){
 }
 
 void Model::on_model_load(){
+    map_vertices_faces();
     calculate_face_normals();
     int recursion_depth = 10;
     std::cout << "Building octtree\n";
@@ -174,9 +174,18 @@ Eigen::MatrixXd Model::get_vertices(){
     return Vertices;
 }
 
-void Model::save_vertices(Eigen::MatrixXd new_vs){
+void Model::set_smooth(bool smooth){
+    smoothing = smooth;
+}
+
+void Model::set_vertices(Eigen::MatrixXd new_vs){
     Vertices = new_vs;
     on_model_load();
+}
+
+void Model::set_vertices_faces(Eigen::MatrixXd new_vs, Eigen::MatrixXi new_fs){
+    Faces = new_fs;
+    set_vertices(new_vs);
 }
 
 bool Model::model_loaded(){
@@ -190,13 +199,12 @@ Eigen::MatrixXi Model::get_faces(){
 double Model::intersect_ray(Ray& ray, Eigen::Vector3d &hit_normal){
     double smallest_t = MISSED_T_VALUE;
     const Eigen::Vector3d& ray_dir = ray.get_dir();
-
     Eigen::Vector3d a_vertex, b_vertex, c_vertex,  a_b, a_c, a_l, solution;
     Eigen::Matrix3d M = Eigen::Matrix3d();
     Eigen::Matrix3d MMs1, MMs2, MMs3;
     double beta, gamma, t_value;
-
     std::set<int> intersected_faces = bounding_box->intersected_faces(ray);
+
     //std::cout << "Intersected_faces: "<<intersected_faces.size() << "\n";
     //std::cout << "returned intersected faces: \n ";
     //    for (auto i = intersected_faces.begin(); i != intersected_faces.end(); ++i)
@@ -223,7 +231,6 @@ double Model::intersect_ray(Ray& ray, Eigen::Vector3d &hit_normal){
             MMs2(i,1) = a_l(i);
             MMs3(i,2) = a_l(i);
         }
-
         beta = MMs1.determinant() / M.determinant();
         if (beta < 0 || beta > 1){
             continue;
@@ -312,6 +319,7 @@ bool Model::test_intersection(Eigen::Vector3d &vertex_a, Eigen::Vector3d &vertex
 
 void Model::load_material(std::string material_file){
     std::ifstream in(material_file);
+    std::cout << "LOADING MATERIAL: " << material_file << "\n";
     if (!in){
         std::cerr << "Could not open " << material_file << std::endl;
         return;

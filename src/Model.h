@@ -25,20 +25,22 @@ class Model: public SceneObject {
         Eigen::Vector3d get_face_normal(int index);
         Eigen::Vector3d get_smooth_face_normal(int face_num, double beta, double gamma);
         Eigen::Vector3d get_vertex_normal(int face_num, int face_vert);
-        void save_vertices(Eigen::MatrixXd new_vs);
+        void set_smooth(bool smooth);
+        void set_vertices(Eigen::MatrixXd new_vs);
+        void set_vertices_faces(Eigen::MatrixXd new_vs, Eigen::MatrixXi new_fs);
         bool model_loaded();
 
         double intersect_ray(Ray& ray, Eigen::Vector3d &hit_normal);
         Ray get_refracted_ray(Ray &orig_ray, Eigen::Vector3d &intersect_pos, Eigen::Vector3d &normal);
         void get_refract_exit(Eigen::Vector3d &intersect_pos, Eigen::Vector3d &refract_ray, Eigen::Vector3d &exit, Eigen::Vector3d& exit_normal);
         bool test_intersection(Eigen::Vector3d &vertex_a, Eigen::Vector3d &vertex_b, Eigen::Vector3d &vertex_c, Ray& ray, double& t_value);
+        void load_material(std::string material_file);
 
   private:
         friend class BoundingBox;
         void load_model();
         void map_vertices_faces();
         void on_model_load();
-        void load_material(std::string material_file);
 
         void add_vertex(double vx, double vy, double vz);
         void add_face(int v1, int v2, int v3);
