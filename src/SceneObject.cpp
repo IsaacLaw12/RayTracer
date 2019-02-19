@@ -19,6 +19,10 @@ double SceneObject::get_eta(){
     return eta;
 }
 
+void SceneObject::set_lighting_group(int group_number){
+    lighting_group = group_number;
+}
+
 Eigen::Matrix3d SceneObject::get_diffuse_color(){
     return diffuse_color;
 }
@@ -47,4 +51,9 @@ Eigen::Matrix3d SceneObject::get_ko(){
 
 int SceneObject::get_lighting_group(){
     return lighting_group;
+}
+
+bool SceneObject::model_loaded(){
+    // Dummy function, should be overwritten by child classes
+    return true;
 }

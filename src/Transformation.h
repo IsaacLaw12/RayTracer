@@ -14,15 +14,16 @@
 class Transformation {
   public:
         Transformation(std::string driver_file);
-        void transform_object();
-        std::string get_model_file_name();
+        void transform_object(Model* new_model);
+        std::string get_asset_name();
+        std::string get_smoothing();
+        int get_lighting_group();
         bool transform_loaded();
-        Model* get_model();
   private:
         void create_transform_matrix(double transform_string[]);
         void generate_transform_matrix();
 
-        std::string model_file_name = "";
+        std::string asset_name = "";
         Model* target_model;
         Eigen::Matrix4d normalize_z_rotate = Eigen::Matrix4d::Identity();
         Eigen::Matrix4d rotate_matrix = Eigen::Matrix4d::Identity();
@@ -31,6 +32,7 @@ class Transformation {
 
         Eigen::Matrix4d final_matrix = Eigen::Matrix4d::Zero();
         bool load_successful = true;
-
+        std::string smoothing = "";
+        int lighting_group = 0;
 };
 #endif
