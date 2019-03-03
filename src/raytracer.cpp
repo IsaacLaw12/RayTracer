@@ -43,12 +43,14 @@ int main(int argc, char*argv[]){
     prepare_directory();
     save_image_file = strip_file_ending(save_image_file);
 
-    int frame_num = 0;
     while (sc.advance_frame()){
-        std::string image_name = SAVE_FOLDER + save_image_file + std::to_string(frame_num) + ".ppm";
+        std::string padded_frame_num = std::to_string(sc.get_current_frame());
+        while (padded_frame_num.size() < 4){
+            padded_frame_num = "0" + padded_frame_num;
+        }
+        std::string image_name = SAVE_FOLDER + save_image_file + padded_frame_num + ".ppm";
         RenderImage ri = RenderImage(&sc);
         ri.render_image(image_name);
-        frame_num++;
     }
     return 0;
 }

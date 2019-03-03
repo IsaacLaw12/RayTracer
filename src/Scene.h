@@ -25,6 +25,7 @@ class Scene {
         Image& get_image();
         std::vector<Light>& get_lights();
         int get_recursion();
+        int get_current_frame();
         bool advance_frame();
         bool has_next_frame();
   private:

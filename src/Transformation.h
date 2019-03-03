@@ -24,6 +24,7 @@ class Transformation {
         void generate_transform_matrix();
 
         std::string asset_name = "";
+        std::string animation_file = "";
         Model* target_model;
         Eigen::Matrix4d normalize_z_rotate = Eigen::Matrix4d::Identity();
         Eigen::Matrix4d rotate_matrix = Eigen::Matrix4d::Identity();
