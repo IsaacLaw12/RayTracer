@@ -30,6 +30,7 @@ Transformation::Transformation(std::string driver_string){
     driver >> smoothing;
     driver >> asset_name;
     driver >> lighting_group;
+    driver >> animation_file;
 }
 
 void Transformation::create_transform_matrix(double transform_string[]){
@@ -90,7 +91,6 @@ void Transformation::generate_transform_matrix(){
 }
 
 void Transformation::transform_object(Model* new_model){
-
     Eigen::MatrixXd temp = final_matrix * new_model->get_vertices();
     new_model->set_vertices( temp );
 }

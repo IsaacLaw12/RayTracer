@@ -20,6 +20,8 @@ class AnimatedObject {
         virtual Model* get_object();
         virtual void advance_frame();
         bool has_next_frame();
+        void reset_current_frame();
+        void set_start_frame(int starting_frame);
         std::string get_model_file_name(int model_index);
 
     protected:

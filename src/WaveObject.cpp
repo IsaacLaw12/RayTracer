@@ -1,21 +1,72 @@
 #include "WaveObject.h"
 
-WaveObject::WaveObject(Eigen::Vector3d corner_one, double len_one, double len_two, Eigen::Vector3d dir_one, Eigen::Vector3d dir_two, int res, std::string material_file){
+WaveObject::WaveObject(Eigen::Vector3d corner_one, double len_one, double len_two, Eigen::Vector3d dir_one, Eigen::Vector3d dir_two, int res, std::string material_file, double height, int number_waves){
     // corner_one, corner_two:  Represent points in space
     // dir_one, dir_two: Should be orthogonal, defines the direction the sides go out from corner_one
     wave_object = new Model();
     wave_object->load_material(material_file);
     wave_object->set_smooth(true);
     resolution = res;
+    wave_height = height;
+    num_waves = number_waves;
     side_one_len = len_one;
     side_two_len = len_two;
     first_corner = corner_one;
     direction_one = dir_one.normalized();
     direction_two = dir_two.normalized();
     second_corner = len_one * dir_one + len_two * dir_two;
+    generate_waves(num_waves, 1234);
 }
 
-void WaveObject::update_model(double time){
+void WaveObject::generate_waves(int num_waves, int random_seed){
+    /*
+    Populate component_waves with waves with random amplitude, frequency, and angle
+    */
+    std::default_random_engine angle_generator(random_seed);
+    std::uniform_real_distribution<double> random_angle(0, 2*M_PI);
+
+    std::default_random_engine freq_generator(random_seed * 2);
+    std::uniform_real_distribution<double> random_freq(5, 10);
+
+    std::default_random_engine ampl_generator(random_seed * 3);
+    std::uniform_real_distribution<double> random_ampl(.5, 1);
+
+    std::default_random_engine pc_generator(random_seed *4);
+    std::uniform_real_distribution<double> random_pc(.5, 4);
+
+    for(int i=0; i<num_waves; i++){
+        wave_parameters current;
+        current.amplitude = random_ampl(ampl_generator);
+        current.frequency = random_freq(freq_generator);
+        current.direction = get_wave_direction(random_angle(angle_generator));
+        current.phase_constant = random_pc(pc_generator);
+        component_waves.push_back(current);
+        std::cout << "wave_frequency: " << current.frequency << " wave.amplitude: " << current.amplitude << "\n";
+        std::cout << "direction: \n" << current.direction << "\n";
+    }/*
+    wave_parameters current;
+    current.amplitude = 1;
+    current.frequency = 15;
+    current.direction = Eigen::Vector3d(1, 0, 0);
+    component_waves.push_back(current);
+*/
+}
+
+Eigen::Vector3d WaveObject::get_wave_direction(double angle){
+    /*
+    Use Rodrigue's rotation formula to rotate an orthognal unit vector around
+    the normal of the wave surface.  The result is a unit vector that aims in a
+    direction defined by angle on the wave plane.
+    */
+    Eigen::Vector3d v = direction_one;
+    Eigen::Vector3d k = direction_one.cross(direction_two);
+    k = k.normalized();
+    Eigen::Vector3d rotated_vector = v * cos(angle) + (k.cross(v)) * sin(angle)
+                                     + k * (k.dot(v)) * (1 - cos(angle));
+    return rotated_vector;
+}
+
+void WaveObject::update_model(){
     // Calculate the wave_function displacement on a grid of points, save vertices and faces to model
     double side_one = 0;
     double side_two = 0;
@@ -30,7 +81,7 @@ void WaveObject::update_model(double time){
                 vertices.conservativeResize(3, vertex_num+1);
             }
             Eigen::Vector3d point_in_space = first_corner + direction_one * i * cell_size + direction_two * j * cell_size;
-            point_in_space += wave_function(i, j, time);
+            point_in_space += wave_function(i*cell_size, j*cell_size, current_frame);
             vertices.col(vertex_num++) << point_in_space(0), point_in_space(1), point_in_space(2);
         }
     }
@@ -50,21 +101,18 @@ void WaveObject::set_num_waves(int waves){
     num_waves = waves;
 }
 
-Eigen::Vector3d WaveObject::wave_function(int coordinate_one, int coordinate_two, double time){
+Eigen::Vector3d WaveObject::wave_function(int offset_one, int offset_two, double time){
     time = time / 40;
     double total = 0;
+    Eigen::Vector3d point = first_corner + offset_one * direction_one + offset_two * direction_two;
     // direction one waves
-    for (int i=1; i<=num_waves*2; i++){
-        double sine = (sin( (coordinate_one + coordinate_two/i) * (1 - 1/i) + i * (time + pow(time, i))) +1) / 2;
-        total += wave_height * pow(sine, 16);
+    for (auto wave:component_waves){
+        double sine = (sin(wave.direction.dot(point)*wave.frequency + time*wave.phase_constant) +1)/2;
+        total += wave_height * wave.amplitude * sine;//pow(sine, 16);
     }
-    // direction two waves
-    for (int i=1; i<=num_waves; i++){
-        double sine =  (sin( (coordinate_two + coordinate_one/i) * (1 - 1/i) + i * time) + 1 ) /2;
-        total += wave_height * pow(sine, 16);
-    }
-
+    total = total / component_waves.size();
     Eigen::Vector3d result = Eigen::Vector3d(0, 0, 0);
+    //std::cout << "TOTAL SINE FUNC: " << total << "\n";
     result += total * (direction_one.cross(direction_two));
     return result;
 }
@@ -110,7 +158,8 @@ void WaveObject::add_face(Eigen::MatrixXi &faces, int a, int b, int c){
 }
 
 void WaveObject::advance_frame(){
-    update_model(++current_frame);
+    update_model();
+    current_frame++;
 }
 
 Model* WaveObject::get_object(){

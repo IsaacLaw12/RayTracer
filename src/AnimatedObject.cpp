@@ -54,6 +54,11 @@ void AnimatedObject::set_object(Model* new_obj){
     current_obj = new_obj;
 }
 
+
+void AnimatedObject::set_start_frame(int starting_frame){
+    current_frame = starting_frame;
+}
+
 Model* AnimatedObject::get_object(){
     std::cout << "returning current obj\n";
     return current_obj;
@@ -86,5 +91,9 @@ std::string AnimatedObject::get_model_file_name(int model_index){
 }
 
 bool AnimatedObject::has_next_frame(){
-    return ( current_frame < model_files.size() );
+    return current_frame < model_files.size();
+}
+
+void AnimatedObject::reset_current_frame(){
+    current_frame = 0;
 }

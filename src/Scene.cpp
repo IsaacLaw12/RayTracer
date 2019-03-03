@@ -34,6 +34,10 @@ int Scene::get_recursion(){
     return recursion_level;
 }
 
+int Scene::get_current_frame(){
+    return current_frame;
+}
+
 bool Scene::advance_frame(){
     std::cout << "current: " << current_frame << " number of frames: " << number_frames << "\n";
     // Call to make the necessary changes to the scene before rendering the next frame
@@ -108,6 +112,7 @@ void Scene::edit_camera(std::string driver_line){
     std::string bounds = "bounds";
     std::string res = "res";
     std::string frames = "frames";
+    std::string start_frame = "start_frame";
     std::string recursion = "recursionLevel";
     std::string focus_blur = "focus_blur";
     std::string anti_alias = "anti_alias";
@@ -149,6 +154,8 @@ void Scene::edit_camera(std::string driver_line){
         if (number_frames < 1){
             number_frames = 1;
         }
+    }else if(!driver_line.compare(0, start_frame.size(), start_frame)) {
+        d_line >> current_frame;
     }
 }
 
@@ -186,10 +193,8 @@ void Scene::add_wave(std::string driver_line){
     Eigen::Vector3d corner_one = Eigen::Vector3d(c1x, c1y, c1z);
     Eigen::Vector3d direction_one = Eigen::Vector3d(d1x, d1y, d1z);
     Eigen::Vector3d direction_two = Eigen::Vector3d(d2x, d2y, d2z);
-    WaveObject* wo = new WaveObject(corner_one, len_one, len_two, direction_one, direction_two, res, material_file);
-    wo->set_height(height);
-    wo->set_num_waves(num_waves);
-    wo->update_model(0);
+    WaveObject* wo = new WaveObject(corner_one, len_one, len_two, direction_one, direction_two, res, material_file, height, num_waves);
+    wo->set_start_frame(current_frame);
     AnimatedObject* ao = wo;
     animated_objects.push_back(ao);
 }
