@@ -2,8 +2,8 @@
 recursionLevel 1
 ambient 0.2 0.2 0.2
 anti_alias 0
-frames 60
-starting_frame 0
+frames 30
+start_frame 28 
 
 # Camera
 eye 0 10 -60

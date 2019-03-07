@@ -171,6 +171,7 @@ void Scene::add_model(std::string driver_line){
     Model* mo = new Model(driver_line);
     if (mo->is_animated()){
         AnimatedObject* ao = new AnimatedObject(mo);
+        ao->set_start_frame(current_frame);
         animated_objects.push_back(ao);
     } else{
         SceneObject* so = (SceneObject*) mo;
