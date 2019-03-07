@@ -1,21 +1,10 @@
 #include "AnimatedObject.h"
 #include <iostream>
 
-AnimatedObject::AnimatedObject(std::string driver_line){
-    model_to_scene = new Transformation(driver_line);
-    std::string asset_name = model_to_scene->get_asset_name();
-    read_directory(asset_name, model_files);
-
-    // If asset_name does not refer to a directory model_files will not be populated
-    //     assume it is an .obj file if it's not a directory
-    if (model_files.size() == 0){
-        model_files.push_back(asset_name);
-    } else{
-        directory_name = asset_name;
-    }
-    if (!filter_obj_files()){
-        std::cout << "Is not an .obj file or a folder containing .obj files: " << asset_name << "\n";
-    }
+AnimatedObject::AnimatedObject(Model* animated_asset){
+     original_obj = animated_asset;
+     animation_file = animated_asset->get_animation_file();
+     load_animation();
 }
 
 AnimatedObject::AnimatedObject(){
@@ -23,75 +12,111 @@ AnimatedObject::AnimatedObject(){
   return;
 }
 
-bool AnimatedObject::filter_obj_files(){
-    std::vector<std::string> temp_files;
-    std::string obj = ".obj";
-    for (auto mf:model_files){
-        if (mf.length() <= obj.length())
-          continue;
-        if (0 == mf.compare(mf.length() - obj.length(), obj.length(), obj) ){
-            temp_files.push_back(mf);
+void AnimatedObject::load_animation(){
+    std::vector<std::string> animation_steps = extract_file_lines(animation_file);
+    int section_start = 0;
+    int section_end = 0;
+    for (std::string animation_step:animation_steps){
+        std::stringstream driver(animation_step);
+        driver >> section_end;
+        std::cout << "Section end: " << section_end << "\n";
+        std::vector<double> transform_floats;
+        double temp = 0;
+        while (driver >> temp){
+            transform_floats.push_back(temp);
         }
+        add_animation_section(section_start, section_end, transform_floats);
+        section_start = section_end;
     }
-    model_files = temp_files;
-    return model_files.size() > 0;
 }
 
-void AnimatedObject::read_directory(const std::string& name, std::vector<std::string>& v){
-    DIR* dirp = opendir(name.c_str());
-    if (dirp == NULL){
+void AnimatedObject::add_animation_section(int section_start, int section_end,  std::vector<double> transform_floats){
+    int number_frames = section_end - section_start;
+    if (number_frames == 0){
         return;
-    } else{
-        struct dirent * dp;
-        while ((dp = readdir(dirp)) != NULL) {
-            v.push_back(dp->d_name);
-        }
-        closedir(dirp);
     }
+    std::vector<double> single_frame_transform = fraction_of_transform(number_frames, transform_floats);
+    for (int i=1; i<number_frames+1; i++){
+        frame_setting current;
+        current.frame_number = section_start + i - 1;
+        current.transform_floats = multiple_of_transform(i, single_frame_transform);
+        current.set_as_new_base_model = (i == number_frames);
+        frame_steps.push_back(current);
+        for (int j=0; j<8; j++){std::cout << current.transform_floats[j] << "  ";}
+        std::cout << "\n";
+    }
+}
+
+std::vector<double> AnimatedObject::fraction_of_transform(double divide_by, std::vector<double> transform_floats){
+    // transform_floats should be 8 long
+    std::vector<double> result;
+    for (int i=0; i<8; i++){
+        double temp = transform_floats[i];
+        // Scale value defaults to 1
+        if (i==4){
+            temp = 1 + (temp-1) / divide_by;
+        }
+        // Transform values default to 0
+        if (i>4){
+            temp = temp / divide_by;
+        }
+        result.push_back(temp);
+    }
+    return result;
+}
+
+std::vector<double> AnimatedObject::multiple_of_transform(double multiply_by, std::vector<double> transform_floats){
+    return fraction_of_transform(1/multiply_by, transform_floats);
+}
+
+std::vector<std::string> AnimatedObject::extract_file_lines(std::string file_name){
+    std::ifstream in(file_name);
+    std::string driver_line;
+    std::vector<std::string> result;
+
+    while (std::getline(in, driver_line)){
+        // An arbitrary check to make sure the line has contents
+        if (driver_line.size() > 10){
+            result.push_back(driver_line);
+        }
+    }
+    return result;
 }
 
 void AnimatedObject::set_object(Model* new_obj){
     current_obj = new_obj;
 }
 
-
 void AnimatedObject::set_start_frame(int starting_frame){
     current_frame = starting_frame;
 }
 
 Model* AnimatedObject::get_object(){
-    std::cout << "returning current obj\n";
     return current_obj;
 }
 
 void AnimatedObject::advance_frame(){
     // Load the next model in the directory if there are any left
     if (has_next_frame()){
-        std::string model_file_name = get_model_file_name(current_frame);
-        current_obj = new Model(model_file_name, model_to_scene->get_smoothing());
-        current_obj->set_lighting_group(model_to_scene->get_lighting_group());
-        if (!current_obj->model_loaded()){
-            std::cout << "MODEL NOT LOADED: " << model_file_name << "\n";
-        } else{
-            Model* model_cast = (Model*) current_obj;
-            model_to_scene->transform_object(model_cast);
+        if (current_frame < frame_steps.size()){
+            std::cout << "Hello\n";
+            frame_setting this_transform = frame_steps[current_frame];
+            Transformation frame_transform(this_transform.transform_floats);
+            current_obj = original_obj;
+            std::cout << "PostCopy\n";
+            frame_transform.transform_object(current_obj);
+            std::cout << "Precopy\n";
+            if (this_transform.set_as_new_base_model){
+                original_obj = current_obj;
+            }
         }
+        std::cout << "Bye\n";
         current_frame++;
     }
 }
 
-std::string AnimatedObject::get_model_file_name(int model_index){
-    // If the .obj asset is contained in a directory append the file name with the directory name
-    std::string temp = "";
-    if (directory_name.length()){
-        temp += directory_name + "/";
-    }
-    temp += model_files[model_index];
-    return temp;
-}
-
 bool AnimatedObject::has_next_frame(){
-    return current_frame < model_files.size();
+    return true;
 }
 
 void AnimatedObject::reset_current_frame(){

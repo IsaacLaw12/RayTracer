@@ -33,6 +33,11 @@ Transformation::Transformation(std::string driver_string){
     driver >> animation_file;
 }
 
+Transformation::Transformation(std::vector<double> transform_floats){
+    create_transform_matrix(&transform_floats[0]);
+    generate_transform_matrix();
+}
+
 void Transformation::create_transform_matrix(double transform_string[]){
     double rot_trans_x = transform_string[0];
     double rot_trans_y = transform_string[1];
@@ -91,6 +96,7 @@ void Transformation::generate_transform_matrix(){
 }
 
 void Transformation::transform_object(Model* new_model){
+    std::cout << "Final Matrix: \n" << final_matrix << "\n";
     Eigen::MatrixXd temp = final_matrix * new_model->get_vertices();
     new_model->set_vertices( temp );
 }
@@ -99,12 +105,17 @@ std::string Transformation::get_asset_name(){
     return asset_name;
 }
 
-std::string Transformation::get_smoothing(){
-    return smoothing;
+bool Transformation::get_smoothing(){
+    std::string smooth = "smooth";
+    return (!smoothing.compare(0, smooth.size(), smooth));
 }
 
 int Transformation::get_lighting_group(){
     return lighting_group;
+}
+
+std::string Transformation::get_animation_file(){
+    return animation_file;
 }
 
 bool Transformation::transform_loaded(){

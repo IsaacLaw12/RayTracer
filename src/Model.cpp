@@ -5,13 +5,26 @@
 #include <iomanip>
 
 
-Model::Model(std::string object_file, std::string smoothin){
-    original_file = object_file;
+Model::Model(std::string driver_line){
+    Transformation model_to_scene = Transformation(driver_line);
+    original_file = model_to_scene.get_asset_name();
     load_model();
-    std::string smooth = "smooth";
-    if (!smoothin.compare(0, smooth.size(), smooth)){
-        smoothing = true;
-    }
+    model_to_scene.transform_object(this);
+    smoothing = model_to_scene.get_smoothing();
+    animation_file = model_to_scene.get_animation_file();
+    on_model_load();
+}
+
+Model::Model(const Model&old_model){
+    // AFTER COPYING on_model_load() NEEDS TO BE CALLED
+    Vertices = old_model.Vertices;
+    Faces = old_model.Faces;
+    FaceNormals = old_model.FaceNormals;
+    vertex_to_faces = old_model.vertex_to_faces;
+    vertex_normals = old_model.vertex_normals;
+    original_file = old_model.original_file;
+    animation_file = old_model.animation_file;
+    smoothing = old_model.smoothing;
 }
 
 Model::Model(){}
@@ -52,7 +65,6 @@ void Model::load_model(){
         }
     }
     in.close();
-    on_model_load();
 }
 
 void Model::map_vertices_faces(){
@@ -71,7 +83,7 @@ void Model::map_vertices_faces(){
 void Model::on_model_load(){
     map_vertices_faces();
     calculate_face_normals();
-    int recursion_depth = 10;
+    int recursion_depth = 8;
     std::cout << "Building octtree\n";
     bounding_box = new BoundingBox(Vertices, Faces, recursion_depth);
     calculate_vertex_normals();
@@ -168,6 +180,14 @@ Eigen::Vector3d Model::get_smooth_face_normal(int face_num, double beta, double 
 
 Eigen::Vector3d Model::get_vertex_normal(int face_num, int face_vert){
     return vertex_normals[face_num*3 + face_vert];
+}
+
+std::string Model::get_animation_file(){
+    return animation_file;
+}
+
+bool Model::is_animated(){
+    return animation_file.size() > 0;
 }
 
 Eigen::MatrixXd Model::get_vertices(){

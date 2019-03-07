@@ -14,8 +14,8 @@ Eigen::Vector3d& Scene::get_ambient(){
     return ambient;
 }
 
-std::vector<SceneObject*>& Scene::get_objects(){
-    return scene_objects;
+std::vector<SceneObject*>& Scene::get_rendered_objects(){
+    return render_objects;
 }
 
 Camera& Scene::get_camera(){
@@ -42,15 +42,15 @@ bool Scene::advance_frame(){
     std::cout << "current: " << current_frame << " number of frames: " << number_frames << "\n";
     // Call to make the necessary changes to the scene before rendering the next frame
     if (has_next_frame()){
-        scene_objects.clear();
-        current_frame++;
+        render_objects.clear();
         for (auto ao:animated_objects){
             ao->advance_frame();
-            scene_objects.push_back(ao->get_object());
+            render_objects.push_back(ao->get_object());
         }
-        for (auto ss:scene_spheres){
-            scene_objects.push_back(ss);
+        for (auto ss:scene_objects){
+            render_objects.push_back(ss);
         }
+        current_frame++;
         return true;
     } else{
         return false;
@@ -165,17 +165,22 @@ void Scene::edit_ambient(std::string driver_line){
     double red, green, blue;
     ambient_read >> line_type >> red >> green >> blue;
     ambient << red, green, blue;
-
 }
 
 void Scene::add_model(std::string driver_line){
-    AnimatedObject* ao = new AnimatedObject(driver_line);
-    animated_objects.push_back(ao);
+    Model* mo = new Model(driver_line);
+    if (mo->is_animated()){
+        AnimatedObject* ao = new AnimatedObject(mo);
+        animated_objects.push_back(ao);
+    } else{
+        SceneObject* so = (SceneObject*) mo;
+        scene_objects.push_back(so);
+    }
 }
 
 void Scene::add_sphere(std::string driver_line){
-    Sphere* sp = new Sphere(driver_line);
-    scene_spheres.push_back(sp);
+    SceneObject* so = new Sphere(driver_line);
+    scene_objects.push_back(so);
 }
 
 void Scene::add_light(std::string driver_line){
