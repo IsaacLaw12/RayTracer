@@ -3,6 +3,7 @@
 
 AnimatedObject::AnimatedObject(Model* animated_asset){
      original_obj = animated_asset;
+     current_obj = new Model(*original_obj);
      animation_file = animated_asset->get_animation_file();
      load_animation();
 }
@@ -57,7 +58,7 @@ std::vector<double> AnimatedObject::fraction_of_transform(double divide_by, std:
             temp = 1 + (temp-1) / divide_by;
         }
         // Transform values default to 0
-        if (i>4){
+        if (i>4 || i==3){
             temp = temp / divide_by;
         }
         result.push_back(temp);
@@ -99,18 +100,16 @@ void AnimatedObject::advance_frame(){
     // Load the next model in the directory if there are any left
     if (has_next_frame()){
         if (current_frame < frame_steps.size()){
-            std::cout << "Hello\n";
             frame_setting this_transform = frame_steps[current_frame];
             Transformation frame_transform(this_transform.transform_floats);
-            current_obj = original_obj;
-            std::cout << "PostCopy\n";
+            delete current_obj;
+            current_obj = new Model(*original_obj);
             frame_transform.transform_object(current_obj);
-            std::cout << "Precopy\n";
             if (this_transform.set_as_new_base_model){
-                original_obj = current_obj;
+                delete original_obj;
+                original_obj = new Model(*current_obj);
             }
         }
-        std::cout << "Bye\n";
         current_frame++;
     }
 }

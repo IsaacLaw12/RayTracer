@@ -66,6 +66,7 @@ bool BoundingBox::axis_test(const Eigen::Vector3d& axis, const Eigen::Vector3d& 
 }
 
 bool BoundingBox::triangle_intersects(Eigen::Vector3d& v0, Eigen::Vector3d& v1, Eigen::Vector3d& v2) {
+    // Test if this AABB intersects with the specified triangle
     Eigen::Vector3d dims = max_corner - min_corner;
     Eigen::Vector3d boxHalfSize(dims[0], dims[1], dims[2]);
     v0 = v0 - center;
@@ -129,8 +130,7 @@ void BoundingBox::subdivide_box(){
                     transform << x*half_x, y*half_y, z*half_z;
                     temp_min = min_corner + transform;
                     temp_max = cube_center + transform;
-                    BoundingBox* sub_bb = new BoundingBox(this, recursion_limit, temp_min, temp_max);
-                    contained_boxes.push_back(sub_bb);
+                    contained_boxes.push_back(std::make_unique<BoundingBox>(this, recursion_limit, temp_min, temp_max));
                 }
             }
         }
@@ -176,7 +176,7 @@ std::set<int> BoundingBox::intersected_faces(Ray& ray){
         return intersected_faces;
     }
     if (contained_boxes.size() > 0){
-        for (auto sub_bb: contained_boxes){
+        for (std::unique_ptr<BoundingBox>& sub_bb: contained_boxes){
             std::set<int> hit_faces = sub_bb->intersected_faces(ray);
             intersected_faces.insert(hit_faces.begin(), hit_faces.end());
         }

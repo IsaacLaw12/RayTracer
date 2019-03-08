@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <memory>
 #include <cmath>
 class BoundingBox;
 #include "BoundingBox.h"
@@ -54,7 +55,7 @@ class Model: public SceneObject {
         void calculate_vertex_normals();
         void calculate_face_normals();
 
-        BoundingBox* bounding_box;
+        std::unique_ptr<BoundingBox> bounding_box;
         Eigen::MatrixXd Vertices = Eigen::MatrixXd();
         Eigen::MatrixXi Faces = Eigen::MatrixXi();
         Eigen::MatrixXd FaceNormals = Eigen::MatrixXd();

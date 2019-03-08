@@ -17,9 +17,9 @@ Model::Model(std::string driver_line){
 
 Model::Model(const Model&old_model){
     // AFTER COPYING on_model_load() NEEDS TO BE CALLED
-    Vertices = old_model.Vertices;
-    Faces = old_model.Faces;
-    FaceNormals = old_model.FaceNormals;
+    Vertices = Eigen::MatrixXd(old_model.Vertices);
+    Faces = Eigen::MatrixXi(old_model.Faces);
+    FaceNormals = Eigen::MatrixXd(old_model.FaceNormals);
     vertex_to_faces = old_model.vertex_to_faces;
     vertex_normals = old_model.vertex_normals;
     original_file = old_model.original_file;
@@ -85,7 +85,7 @@ void Model::on_model_load(){
     calculate_face_normals();
     int recursion_depth = 8;
     std::cout << "Building octtree\n";
-    bounding_box = new BoundingBox(Vertices, Faces, recursion_depth);
+    bounding_box = std::make_unique<BoundingBox>(Vertices, Faces, recursion_depth);
     calculate_vertex_normals();
 }
 

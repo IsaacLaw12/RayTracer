@@ -190,7 +190,7 @@ void Scene::add_light(std::string driver_line){
 }
 
 void Scene::add_wave(std::string driver_line){
-    // wave  0 0 0   10 0 10    1 0 0   0 0 1  10
+    // wave  corner1 side_length side_length dir1 dir2 res height  num_waves material
     std::stringstream d_line(driver_line);
     std::string line_type, material_file;
     double c1x, c1y, c1z, len_one, len_two, d1x, d1y, d1z, d2x, d2y, d2z, res, height;

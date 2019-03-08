@@ -102,7 +102,7 @@ void WaveObject::set_num_waves(int waves){
 }
 
 Eigen::Vector3d WaveObject::wave_function(int offset_one, int offset_two, double time){
-    time = time / 40;
+    time = time / 60;
     double total = 0;
     Eigen::Vector3d point = first_corner + offset_one * direction_one + offset_two * direction_two;
     // direction one waves
