@@ -20,7 +20,7 @@ class Scene {
   public:
         Scene(std::string driver_file);
         Eigen::Vector3d& get_ambient();
-        std::vector<SceneObject*>& get_objects();
+        std::vector<SceneObject*>& get_rendered_objects();
         Camera& get_camera();
         Image& get_image();
         std::vector<Light>& get_lights();
@@ -44,8 +44,8 @@ class Scene {
         Camera scene_camera;
         Image destination_image = Image(0, 0);
         std::vector<SceneObject*> scene_objects;
+        std::vector<SceneObject*> render_objects;
         std::vector<AnimatedObject*> animated_objects;
-        std::vector<Sphere*> scene_spheres;
         std::vector<Light> scene_lights;
         Eigen::Vector3d ambient;
 

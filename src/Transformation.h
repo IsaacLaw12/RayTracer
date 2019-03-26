@@ -14,9 +14,11 @@
 class Transformation {
   public:
         Transformation(std::string driver_file);
+        Transformation(std::vector<double> transform_floats);
         void transform_object(Model* new_model);
         std::string get_asset_name();
-        std::string get_smoothing();
+        std::string get_animation_file();
+        bool get_smoothing();
         int get_lighting_group();
         bool transform_loaded();
   private:

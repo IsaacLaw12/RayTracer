@@ -10,6 +10,7 @@
 
 class SceneObject {
     public:
+        virtual ~SceneObject(){};
         virtual double intersect_ray(Ray&, Eigen::Vector3d &)=0;
         virtual Ray get_refracted_ray(Ray&, Eigen::Vector3d&, Eigen::Vector3d&)=0;
         Eigen::Vector3d refract_ray(Eigen::Vector3d &w, Eigen::Vector3d &normal, double first_eta, double second_eta);

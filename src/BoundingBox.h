@@ -5,6 +5,7 @@
 #include <iostream>
 #include <vector>
 #include <set>
+#include <memory>
 class Model;
 #include "Model.h"
 #include "Ray.h"
@@ -19,7 +20,6 @@ class BoundingBox {
   public:
         BoundingBox(Eigen::MatrixXd& verts, Eigen::MatrixXi& faces, int recursionLimit);
         BoundingBox(BoundingBox* parent_bb, int recursionLimit, Eigen::Vector3d min, Eigen::Vector3d max);
-
         Eigen::Vector3d get_min_corner();
         Eigen::Vector3d get_max_corner();
         Eigen::Vector3d get_vertex(int index);
@@ -38,7 +38,7 @@ class BoundingBox {
 
         Eigen::MatrixXd& Vertices;
         Eigen::MatrixXi& Faces;
-        std::vector<BoundingBox* > contained_boxes;
+        std::vector<std::unique_ptr<BoundingBox>> contained_boxes;
         std::set<int> contained_faces;
 
         // Bounding box coordinates
