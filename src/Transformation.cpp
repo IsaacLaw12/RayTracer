@@ -96,7 +96,6 @@ void Transformation::generate_transform_matrix(){
 }
 
 void Transformation::transform_object(Model* new_model){
-    std::cout << "Final Matrix: \n" << final_matrix << "\n";
     Eigen::MatrixXd temp = final_matrix * new_model->get_vertices();
     new_model->set_vertices( temp );
 }

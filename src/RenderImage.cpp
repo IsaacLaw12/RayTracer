@@ -39,7 +39,6 @@ void RenderImage::ray_trace(Ray& ray, Eigen::Vector3d& accum, Eigen::Vector3d& a
     SceneObject* hit_obj = scene->get_rendered_objects()[0];
     Eigen::Vector3d hit_normal;
     t_value = find_intersection(ray, hit_obj, hit_normal);
-    //std::cout << "t-value: " << t_value << "\n";
 
     calculate_color(ray, t_value, hit_obj, hit_normal, accum, ampl, level);
 }

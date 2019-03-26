@@ -20,7 +20,6 @@ void AnimatedObject::load_animation(){
     for (std::string animation_step:animation_steps){
         std::stringstream driver(animation_step);
         driver >> section_end;
-        std::cout << "Section end: " << section_end << "\n";
         std::vector<double> transform_floats;
         double temp = 0;
         while (driver >> temp){
@@ -43,8 +42,6 @@ void AnimatedObject::add_animation_section(int section_start, int section_end,  
         current.transform_floats = multiple_of_transform(i, single_frame_transform);
         current.set_as_new_base_model = (i == number_frames);
         frame_steps.push_back(current);
-        for (int j=0; j<8; j++){std::cout << current.transform_floats[j] << "  ";}
-        std::cout << "\n";
     }
 }
 
@@ -99,23 +96,22 @@ Model* AnimatedObject::get_object(){
 void AnimatedObject::advance_frame(){
     // Load the next model in the directory if there are any left
     if (has_next_frame()){
-        if (current_frame < frame_steps.size()){
-            frame_setting this_transform = frame_steps[current_frame];
-            Transformation frame_transform(this_transform.transform_floats);
-            delete current_obj;
-            current_obj = new Model(*original_obj);
-            frame_transform.transform_object(current_obj);
-            if (this_transform.set_as_new_base_model){
-                delete original_obj;
-                original_obj = new Model(*current_obj);
-            }
-        }
+          frame_setting this_transform = frame_steps[current_frame];
+          Transformation frame_transform(this_transform.transform_floats);
+          delete current_obj;
+          current_obj = new Model(*original_obj);
+          frame_transform.transform_object(current_obj);
+          if (this_transform.set_as_new_base_model){
+              delete original_obj;
+              original_obj = new Model(*current_obj);
+          }
+
         current_frame++;
     }
 }
 
 bool AnimatedObject::has_next_frame(){
-    return true;
+    return current_frame < frame_steps.size();
 }
 
 void AnimatedObject::reset_current_frame(){
