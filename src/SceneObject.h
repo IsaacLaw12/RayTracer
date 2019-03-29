@@ -27,6 +27,7 @@ class SceneObject {
         Eigen::Matrix3d get_ko();
         int get_lighting_group();
         bool model_loaded();
+        void load_material(std::string material_file);
     protected:
         double phong = 16;
         double eta = 1;
@@ -36,5 +37,7 @@ class SceneObject {
         Eigen::Matrix3d specular_color = Eigen::Matrix3d().Zero();
         Eigen::Matrix3d attenuation_color = Eigen::Matrix3d().Identity();
         Eigen::Matrix3d refract_color = Eigen::Matrix3d().Identity();
+
+        double MISSED_T_VALUE = 1000000000;
 };
 #endif

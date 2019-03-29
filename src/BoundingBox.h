@@ -20,11 +20,14 @@ class BoundingBox {
   public:
         BoundingBox(Eigen::MatrixXd& verts, Eigen::MatrixXi& faces, int recursionLimit);
         BoundingBox(BoundingBox* parent_bb, int recursionLimit, Eigen::Vector3d min, Eigen::Vector3d max);
+        BoundingBox(Eigen::Vector3d min_corn, Eigen::Vector3d max_corn);
         Eigen::Vector3d get_min_corner();
         Eigen::Vector3d get_max_corner();
         Eigen::Vector3d get_vertex(int index);
         std::vector<int> get_contained_faces();
         std::set<int> intersected_faces(Ray& ray);
+        bool ray_intersects(Ray& ray);
+        bool ray_intersects(Ray& ray, double &tmin, double & tmax);
   private:
         void find_contained_faces(std::set<int> &parent_faces);
         double max(double a, double b, double c);
@@ -34,7 +37,6 @@ class BoundingBox {
         void find_corners();
         void subdivide_box();
         void calculate_bounding();
-        bool ray_intersects(Ray& ray);
 
         Eigen::MatrixXd& Vertices;
         Eigen::MatrixXi& Faces;

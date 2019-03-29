@@ -190,17 +190,7 @@ void Scene::add_light(std::string driver_line){
 }
 
 void Scene::add_wave(std::string driver_line){
-    // wave  corner1 side_length side_length dir1 dir2 res height  num_waves material
-    std::stringstream d_line(driver_line);
-    std::string line_type, material_file;
-    double c1x, c1y, c1z, len_one, len_two, d1x, d1y, d1z, d2x, d2y, d2z, res, height;
-    int num_waves;
-    d_line >>line_type>>c1x>>c1y>>c1z>>len_one>>len_two>>d1x>>d1y>>d1z>>d2x>>d2y>>d2z>>res>>height>>num_waves>>material_file;
-    Eigen::Vector3d corner_one = Eigen::Vector3d(c1x, c1y, c1z);
-    Eigen::Vector3d direction_one = Eigen::Vector3d(d1x, d1y, d1z);
-    Eigen::Vector3d direction_two = Eigen::Vector3d(d2x, d2y, d2z);
-    WaveObject* wo = new WaveObject(corner_one, len_one, len_two, direction_one, direction_two, res, material_file, height, num_waves);
-    wo->set_start_frame(current_frame);
-    AnimatedObject* ao = wo;
+    WaveAnimation* wa = new WaveAnimation(driver_line, current_frame);
+    AnimatedObject* ao = wa;
     animated_objects.push_back(ao);
 }

@@ -34,6 +34,12 @@ BoundingBox::BoundingBox(BoundingBox* parent_bb, int recursionLimit, Eigen::Vect
     subdivide_box();
 }
 
+BoundingBox::BoundingBox(Eigen::Vector3d min_corn, Eigen::Vector3d max_corn){
+    // Non recursive constructor, for objects that only need a bounding box
+    min_corner = min_corn;
+    max_corner = max_corn;
+}
+
 void BoundingBox::find_contained_faces(std::set<int> &parent_faces){
     Eigen::Vector3d point_a, point_b, point_c;
     for(auto face_num: parent_faces){
@@ -187,10 +193,15 @@ std::set<int> BoundingBox::intersected_faces(Ray& ray){
 }
 
 bool BoundingBox::ray_intersects(Ray& ray){
+    double not_used, not_used2;
+    return ray_intersects(ray, not_used, not_used2);
+}
+
+bool BoundingBox::ray_intersects(Ray& ray, double &tmin, double &tmax){
     const Eigen::Vector3d& ray_pt = ray.get_point();
     const Eigen::Vector3d& ray_dir = ray.get_dir();
-    double tmin = (min_corner(0) - ray_pt(0)) / ray_dir(0);
-    double tmax = (max_corner(0) - ray_pt(0)) / ray_dir(0);
+    tmin = (min_corner(0) - ray_pt(0)) / ray_dir(0);
+    tmax = (max_corner(0) - ray_pt(0)) / ray_dir(0);
 
     if (tmin > tmax) std::swap(tmin, tmax);
 

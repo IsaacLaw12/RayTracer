@@ -39,7 +39,6 @@ class Model: public SceneObject {
         Ray get_refracted_ray(Ray &orig_ray, Eigen::Vector3d &intersect_pos, Eigen::Vector3d &normal);
         void get_refract_exit(Eigen::Vector3d &intersect_pos, Eigen::Vector3d &refract_ray, Eigen::Vector3d &exit, Eigen::Vector3d& exit_normal);
         bool test_intersection(Eigen::Vector3d &vertex_a, Eigen::Vector3d &vertex_b, Eigen::Vector3d &vertex_c, Ray& ray, double& t_value);
-        void load_material(std::string material_file);
 
   private:
         friend class BoundingBox;
@@ -68,6 +67,5 @@ class Model: public SceneObject {
         std::string animation_file;
         bool load_successful = true;
         bool smoothing = false;
-        double MISSED_T_VALUE = 1000000000;
 };
 #endif
