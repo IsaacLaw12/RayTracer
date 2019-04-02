@@ -14,7 +14,7 @@ void Camera::set_look(double x_dir, double y_dir, double z_dir){
 }
 
 void Camera::set_up(double x_dir, double y_dir, double z_dir){
-    up_dir = Eigen::Vector3d(x_dir, y_dir, z_dir);
+    up_dir = Eigen::Vector3d(x_dir, y_dir, z_dir).normalized();
 }
 
 void Camera::set_focal_length(double foc_length){
@@ -39,8 +39,7 @@ void Camera::set_anti_alias(int aa_level){
 }
 
 void Camera::calculate_axis(){
-    z_axis = eye - look;
-    z_axis = z_axis.normalized();
+    z_axis = (eye - look).normalized();
     x_axis = up_dir.cross(z_axis).normalized();
     y_axis = z_axis.cross(x_axis).normalized();
 

@@ -14,6 +14,7 @@ class Ray {
         void set_dir(Eigen::Vector3d ray_dir);
         const Eigen::Vector3d& get_point();
         const Eigen::Vector3d& get_dir();
+        Eigen::Vector3d get_ray_loc(double t_value);
     private:
         double phong;
         Eigen::Vector3d point;

@@ -3,6 +3,26 @@
 Image::Image(int width, int height){
     set_dimensions(width, height);
 }
+
+Image::Image(const Image&old_image){
+    anti_alias = old_image.get_aa();
+    int width = old_image.get_width();
+    int height = old_image.get_height();
+    set_dimensions(width, height);
+}
+
+int Image::get_width() const{
+    return image_width;
+}
+
+int Image::get_height() const{
+    return image_height;
+}
+
+int Image::get_aa() const{
+    return anti_alias;
+}
+
 void Image::set_dimensions(int width, int height){
   int scale = anti_alias + 1;
   image_width = width * scale;
@@ -19,6 +39,7 @@ void Image::set_dimensions(int width, int height){
 }
 
 void Image::write_pixel(int index_x, int index_y, Eigen::Vector3d rgb){
+    std::cout << "image_width: " << image_width << " index_x: " << index_x << "\n";
     red_pixels(index_x, index_y) = rgb(0);
     green_pixels(index_x, index_y) = rgb(1);
     blue_pixels(index_x, index_y) = rgb(2);
@@ -45,6 +66,7 @@ void Image::save_image(std::string file_name){
     }
 
     output << "P3" << "\n";
+    std::cout << "Image_wid: " << image_width << "\n";
     output << image_width << " " << image_height << " 255" << "\n";
     int red, green, blue;
     for (int i=image_height-1;i>=0; i--){
@@ -120,8 +142,9 @@ void Image::apply_anti_alias(){
         cur->resize(new_width, new_height);
         *cur = Eigen::MatrixXd(scaled_down);
     }
-
+    std::cout << "Image_width: " << image_width << "\n";
     image_width = new_width;
+    std::cout << "Image_width: " << image_width << "\n";
     image_height = new_height;
 }
 

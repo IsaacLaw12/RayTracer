@@ -5,6 +5,7 @@
 #include <Eigen>
 #include <Core>
 #include <cmath>
+#include <fstream>
 
 #include "Ray.h"
 

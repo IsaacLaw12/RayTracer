@@ -13,6 +13,7 @@
 #include "Sphere.h"
 #include "SceneObject.h"
 #include "Ray.h"
+#include "WaveAnimation.h"
 #include "WaveObject.h"
 
 
@@ -26,6 +27,7 @@ class Scene {
         std::vector<Light>& get_lights();
         int get_recursion();
         int get_current_frame();
+        void reset_image();
         bool advance_frame();
         bool has_next_frame();
   private:

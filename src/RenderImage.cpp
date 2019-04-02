@@ -5,6 +5,7 @@ RenderImage::RenderImage(Scene* attached_scene){
 }
 
 void RenderImage::render_image(std::string save_image_file){
+    scene->reset_image();
     shoot_rays();
     scene->get_image().save_image(save_image_file);
 }

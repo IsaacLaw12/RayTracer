@@ -89,7 +89,7 @@ void AnimatedObject::set_start_frame(int starting_frame){
     current_frame = starting_frame;
 }
 
-Model* AnimatedObject::get_object(){
+SceneObject* AnimatedObject::get_object(){
     return current_obj;
 }
 

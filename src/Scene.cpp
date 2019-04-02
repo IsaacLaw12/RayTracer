@@ -38,6 +38,11 @@ int Scene::get_current_frame(){
     return current_frame;
 }
 
+void Scene::reset_image(){
+    Image copy = destination_image;
+    destination_image = copy;
+}
+
 bool Scene::advance_frame(){
     std::cout << "current: " << current_frame << " number of frames: " << number_frames << "\n";
     // Call to make the necessary changes to the scene before rendering the next frame

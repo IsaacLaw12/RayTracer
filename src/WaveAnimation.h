@@ -3,6 +3,7 @@
 
 #include "SceneObject.h"
 #include "AnimatedObject.h"
+#include "WaveObject.h"
 
 
 class WaveAnimation: public AnimatedObject {

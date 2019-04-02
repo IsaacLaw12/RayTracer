@@ -26,7 +26,7 @@ class AnimatedObject {
         void load_animation();
         std::vector<std::string> extract_file_lines(std::string file_name);
         void set_object(Model* new_obj);
-        virtual Model* get_object();
+        virtual SceneObject* get_object();
         virtual void advance_frame();
         bool has_next_frame();
         void reset_current_frame();

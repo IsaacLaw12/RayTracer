@@ -6,8 +6,8 @@
 #include <map>
 #include <memory>
 #include <cmath>
-class BoundingBox;
-#include "BoundingBox.h"
+class OctTree;
+#include "OctTree.h"
 #include "SceneObject.h"
 #include "Ray.h"
 #include "Transformation.h"
@@ -41,7 +41,7 @@ class Model: public SceneObject {
         bool test_intersection(Eigen::Vector3d &vertex_a, Eigen::Vector3d &vertex_b, Eigen::Vector3d &vertex_c, Ray& ray, double& t_value);
 
   private:
-        friend class BoundingBox;
+        friend class OctTree;
         void load_model();
         void map_vertices_faces();
         void on_model_load();
@@ -54,7 +54,7 @@ class Model: public SceneObject {
         void calculate_vertex_normals();
         void calculate_face_normals();
 
-        std::unique_ptr<BoundingBox> bounding_box;
+        std::unique_ptr<OctTree> bounding_box;
         Eigen::MatrixXd Vertices = Eigen::MatrixXd();
         Eigen::MatrixXi Faces = Eigen::MatrixXi();
         Eigen::MatrixXd FaceNormals = Eigen::MatrixXd();
