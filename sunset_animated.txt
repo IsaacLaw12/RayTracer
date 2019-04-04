@@ -1,7 +1,7 @@
 # Scene settings
 recursionLevel 1
 ambient 0.2 0.2 0.2
-anti_alias 1
+anti_alias 0
 frames 480
 start_frame 0
 
@@ -14,9 +14,9 @@ bounds -3 -2 3 2
 
 # Image   Uncomment the size of image desired. Note that anti_aliasing exponentially increases time
 #res  3600 2400
-res 1500 1000
+#res 1500 1000
 #res 768 512
-#res 384 256
+res 384 256
 #res 192 128
 #res 24 16
 #res 6 4
