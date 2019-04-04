@@ -84,7 +84,6 @@ void Model::on_model_load(){
     map_vertices_faces();
     calculate_face_normals();
     int recursion_depth = 8;
-    std::cout << "Building octtree\n";
     bounding_box = std::make_unique<OctTree>(Vertices, Faces, recursion_depth);
     calculate_vertex_normals();
 }

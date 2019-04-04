@@ -11,7 +11,6 @@ BoundingBox::BoundingBox(Eigen::Vector3d min_corn, Eigen::Vector3d max_corn){
     // Non recursive constructor, for objects that only need a bounding box
     min_corner = min_corn;
     max_corner = max_corn;
-    std::cout << "BB created with min: \n" << min_corner << "\nmax:\n" << max_corner << "\n";
 }
 
 BoundingBox::BoundingBox(){}

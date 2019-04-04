@@ -40,11 +40,12 @@ int Scene::get_current_frame(){
 
 void Scene::reset_image(){
     Image copy = destination_image;
+    copy.set_dimensions(scene_camera.pixel_width, scene_camera.pixel_height);
     destination_image = copy;
 }
 
 bool Scene::advance_frame(){
-    std::cout << "current: " << current_frame << " number of frames: " << number_frames << "\n";
+    std::cout << "current: " << current_frame << " out of: " << number_frames << "\n";
     // Call to make the necessary changes to the scene before rendering the next frame
     if (has_next_frame()){
         render_objects.clear();
@@ -185,8 +186,15 @@ void Scene::add_model(std::string driver_line){
 }
 
 void Scene::add_sphere(std::string driver_line){
-    SceneObject* so = new Sphere(driver_line);
-    scene_objects.push_back(so);
+    Sphere* sp = new Sphere(driver_line);
+    if (sp->is_animated()){
+        AnimatedSphere* as = new AnimatedSphere(sp);
+        as->set_start_frame(current_frame);
+        animated_objects.push_back(as);
+    } else{
+        SceneObject* so = (SceneObject*) sp;
+        scene_objects.push_back(so);
+    }
 }
 
 void Scene::add_light(std::string driver_line){

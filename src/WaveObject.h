@@ -47,6 +47,7 @@ class WaveObject: public SceneObject {
       double search_step = 1;
       double wave_height = .5;
       int num_waves = 1;
+      int random_seed = 1;
       double side_len_one = 0;
       double side_len_two = 0;
       Eigen::Vector3d first_corner;

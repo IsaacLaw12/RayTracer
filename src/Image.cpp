@@ -8,15 +8,16 @@ Image::Image(const Image&old_image){
     anti_alias = old_image.get_aa();
     int width = old_image.get_width();
     int height = old_image.get_height();
+    std::cout << "Constructed with width: " << width << "\n";
     set_dimensions(width, height);
 }
 
 int Image::get_width() const{
-    return image_width;
+    return orig_width;
 }
 
 int Image::get_height() const{
-    return image_height;
+    return orig_height;
 }
 
 int Image::get_aa() const{
@@ -25,6 +26,8 @@ int Image::get_aa() const{
 
 void Image::set_dimensions(int width, int height){
   int scale = anti_alias + 1;
+  orig_width = width;
+  orig_height = height;
   image_width = width * scale;
   image_height = height * scale;
   red_pixels = Eigen::MatrixXd();
@@ -39,7 +42,6 @@ void Image::set_dimensions(int width, int height){
 }
 
 void Image::write_pixel(int index_x, int index_y, Eigen::Vector3d rgb){
-    std::cout << "image_width: " << image_width << " index_x: " << index_x << "\n";
     red_pixels(index_x, index_y) = rgb(0);
     green_pixels(index_x, index_y) = rgb(1);
     blue_pixels(index_x, index_y) = rgb(2);

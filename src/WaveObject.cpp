@@ -4,7 +4,7 @@ WaveObject::WaveObject(std::string driver_line, int current_time){
     set_time(current_time);
     extract_wave_info(driver_line);
     set_bounding_box();
-    generate_waves(num_waves, 12345);
+    generate_waves(num_waves, random_seed);
 }
 
 Ray WaveObject::get_refracted_ray(Ray &ray, Eigen::Vector3d &n, Eigen::Vector3d &m){
@@ -84,7 +84,7 @@ void WaveObject::set_time(int current_time){
 }
 
 Eigen::Vector3d WaveObject::find_surf_norm(Ray &ray, double t_value){
-    double epsilon = .05;
+    double epsilon = .5;
     Eigen::Vector3d loc = ray.get_ray_loc(t_value);
     double offset_one = 0;
     double offset_two = 0;
@@ -114,8 +114,8 @@ void WaveObject::extract_wave_info(std::string driver_line){
     std::stringstream d_line(driver_line);
     std::string line_type, material_file;
     double c1x, c1y, c1z, len_one, len_two, d1x, d1y, d1z, d2x, d2y, d2z, res, height;
-    int n_waves;
-    d_line >>line_type>>c1x>>c1y>>c1z>>len_one>>len_two>>d1x>>d1y>>d1z>>d2x>>d2y>>d2z>>res>>height>>n_waves>>material_file;
+    int n_waves, seed;
+    d_line >>line_type>>c1x>>c1y>>c1z>>len_one>>len_two>>d1x>>d1y>>d1z>>d2x>>d2y>>d2z>>res>>height>>n_waves>>seed>>material_file;
 
     side_len_one = len_one;
     side_len_two = len_two;

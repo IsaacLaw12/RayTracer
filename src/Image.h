@@ -35,6 +35,8 @@ class Image {
 
       bool focus_blur = false;
       int anti_alias = 0;
+      int orig_width = 0;
+      int orig_height = 0;
       int image_width = 0;
       int image_height = 0;
       Eigen::MatrixXd red_pixels;

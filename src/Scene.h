@@ -5,6 +5,7 @@
 #include <vector>
 #include <sstream>
 #include "AnimatedObject.h"
+#include "AnimatedSphere.h"
 #include "Model.h"
 #include "Transformation.h"
 #include "Camera.h"

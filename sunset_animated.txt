@@ -1,9 +1,9 @@
 # Scene settings
 recursionLevel 1
 ambient 0.2 0.2 0.2
-anti_alias 0
-frames 250
-start_frame 0 
+anti_alias 1
+frames 480
+start_frame 0
 
 # Camera
 eye 0 10 -60
@@ -14,10 +14,11 @@ bounds -3 -2 3 2
 
 # Image   Uncomment the size of image desired. Note that anti_aliasing exponentially increases time
 #res  3600 2400
-#res 1500 1000
+res 1500 1000
 #res 768 512
-res 384 256
+#res 384 256
 #res 192 128
+#res 24 16
 #res 6 4
 #focus_blur 50 30 10
 
@@ -28,13 +29,13 @@ light 0 5 500 0 0.5 0.2 .2   1
 
 # Objects
 # model 0.0 1.0 0.0  185 6    0 -2.7 0.0 smooth small_wave    0
-#     corner1    side_length  side_length  dir1     dir2   res height  num_waves material
-wave  -8 -3.8 -8   14            14          1 0 0   0 0 1  20   .1    5        wave.mtl
-model 0 1.0 0.0    90   .5   0 -3.8 13 smooth fisher.obj    0  fisher_animation.txt
+#     corner1    side_length  side_length  dir1     dir2   res height  num_waves random_seed material
+wave  -8 -3 -8   16            21          1 0 0   0 0 1  20   .1    4          300          wave.mtl
+model 0 1.0 0.0    90   .5   -2 -3 13 smooth fisher.obj    0  fisher_animation.txt
 
 # Sun      last number is lighting group
-sphere -2 -4 20    3  .2 .2 .2     .6 .15 0      0 0 0    .9 .9 .9   0 0 0    32  1.3    1
-#sphere -3  4 40  3  .2 .2 .2     .8 .1 0      0 0 0    .9 .9 .9   1 1 1    32  1.3    1
+sphere -2 -3 20    3  .2 .2 .2     .6 .15 0    0 0 0    .9 .9 .9   0 0 0    32  1.3    1 sun_animation.txt
+#sphere -2  4 40  3  .2 .2 .2     .8 .1 0    0 0 0    .9 .9 .9   1 1 1    32  1.3    1
 
 # Sun lighting. Lighting group 1
 light -9   5  20  1   1 1 1   1

@@ -85,8 +85,11 @@ void AnimatedObject::set_object(Model* new_obj){
     current_obj = new_obj;
 }
 
-void AnimatedObject::set_start_frame(int starting_frame){
-    current_frame = starting_frame;
+void AnimatedObject::set_start_frame(unsigned starting_frame){
+    current_frame = 0;
+    while (current_frame < starting_frame){
+        advance_frame();
+    }
 }
 
 SceneObject* AnimatedObject::get_object(){

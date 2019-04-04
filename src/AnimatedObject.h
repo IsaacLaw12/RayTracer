@@ -30,10 +30,11 @@ class AnimatedObject {
         virtual void advance_frame();
         bool has_next_frame();
         void reset_current_frame();
-        void set_start_frame(int starting_frame);
+        void set_start_frame(unsigned starting_frame);
 
     protected:
         unsigned current_frame = 0;
+        std::string animation_file = "";
 
     private:
         void add_animation_section(int section_start, int section_end, std::vector<double> transform_floats);
@@ -42,6 +43,5 @@ class AnimatedObject {
         std::vector<frame_setting> frame_steps;
         Model* original_obj;
         Model* current_obj;
-        std::string animation_file = "";
 };
 #endif
