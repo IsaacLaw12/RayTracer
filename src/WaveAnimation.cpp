@@ -9,6 +9,5 @@ void WaveAnimation::advance_frame(){
 }
 
 SceneObject* WaveAnimation::get_object(){
-    std::cout << "Returning wave object\n";
     return wave_object;
 }

@@ -40,7 +40,6 @@ int Scene::get_current_frame(){
 
 void Scene::reset_image(){
     Image copy = destination_image;
-    copy.set_dimensions(scene_camera.pixel_width, scene_camera.pixel_height);
     destination_image = copy;
 }
 

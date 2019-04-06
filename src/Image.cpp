@@ -8,7 +8,6 @@ Image::Image(const Image&old_image){
     anti_alias = old_image.get_aa();
     int width = old_image.get_width();
     int height = old_image.get_height();
-    std::cout << "Constructed with width: " << width << "\n";
     set_dimensions(width, height);
 }
 
@@ -25,20 +24,20 @@ int Image::get_aa() const{
 }
 
 void Image::set_dimensions(int width, int height){
-  int scale = anti_alias + 1;
-  orig_width = width;
-  orig_height = height;
-  image_width = width * scale;
-  image_height = height * scale;
-  red_pixels = Eigen::MatrixXd();
-  green_pixels = Eigen::MatrixXd();
-  blue_pixels = Eigen::MatrixXd();
-  red_pixels.conservativeResize(image_width, image_height);
-  green_pixels.conservativeResize(image_width, image_height);
-  blue_pixels.conservativeResize(image_width, image_height);
+    int scale = anti_alias + 1;
+    orig_width = width;
+    orig_height = height;
+    image_width = width * scale;
+    image_height = height * scale;
+    red_pixels = Eigen::MatrixXd();
+    green_pixels = Eigen::MatrixXd();
+    blue_pixels = Eigen::MatrixXd();
+    red_pixels.conservativeResize(image_width, image_height);
+    green_pixels.conservativeResize(image_width, image_height);
+    blue_pixels.conservativeResize(image_width, image_height);
 
-  t_values = Eigen::MatrixXd();
-  t_values.conservativeResize(image_width, image_height);
+    t_values = Eigen::MatrixXd();
+    t_values.conservativeResize(image_width, image_height);
 }
 
 void Image::write_pixel(int index_x, int index_y, Eigen::Vector3d rgb){
@@ -68,11 +67,11 @@ void Image::save_image(std::string file_name){
     }
 
     output << "P3" << "\n";
-    std::cout << "Image_wid: " << image_width << "\n";
-    output << image_width << " " << image_height << " 255" << "\n";
+    std::cout << "Image_wid: " << orig_width << "\n";
+    output << orig_width << " " << orig_height << " 255" << "\n";
     int red, green, blue;
-    for (int i=image_height-1;i>=0; i--){
-        for (int j=0; j<image_width; j++){
+    for (int i=orig_height-1;i>=0; i--){
+        for (int j=0; j<orig_width; j++){
             red = convert_255(red_pixels(j, i));
             green = convert_255(green_pixels(j, i));
             blue = convert_255(blue_pixels(j, i));
