@@ -5,7 +5,7 @@ WaveAnimation::WaveAnimation(std::string driver_line, int current_frame){
 }
 
 void WaveAnimation::advance_frame(){
-    wave_object->set_time(current_frame++);
+    wave_object->set_time(wave_object->get_time() + 1);
 }
 
 SceneObject* WaveAnimation::get_object(){

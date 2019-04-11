@@ -25,6 +25,7 @@ class WaveObject: public SceneObject {
       Ray get_refracted_ray(Ray &ray, Eigen::Vector3d &n, Eigen::Vector3d &m);
       double intersect_ray(Ray& ray, Eigen::Vector3d &hit_normal);
       void set_time(int current_time);
+      int get_time();
       void extract_wave_info(std::string driver_line);
 
   private:

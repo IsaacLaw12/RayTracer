@@ -83,6 +83,10 @@ void WaveObject::set_time(int current_time){
     time = current_time;
 }
 
+int WaveObject::get_time(){
+    return time;
+}
+
 Eigen::Vector3d WaveObject::find_surf_norm(Ray &ray, double t_value){
     double epsilon = .5;
     Eigen::Vector3d loc = ray.get_ray_loc(t_value);
