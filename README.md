@@ -12,8 +12,8 @@
 
 
 ## Stages of development
-   The project started as a semester long project to build a render engine for my computer graphics class.  At the end of the class my raytracer could render still images of triangle meshes and spheres with realistic details such as reflection and refraction.
-   Once the computer graphics class was finished I continued development for an independent study.  In this second stage of development I updated the whole raytracer program to support animated objects.  I also added a new kind of object, a 3d wave object that is the composite of multiple sine waves.  The finale of the independent study was a render of a sunset feature that prominently featured this wave surface.  The final render is available [here]( https://youtu.be/bL9ruEOcmrc)
+&nbsp;&nbsp;&nbsp;&nbsp;The project started as a semester long project to build a render engine for my computer graphics class.  At the end of the class my raytracer could render still images of triangle meshes and spheres with realistic details such as reflection and refraction.</br>
+&nbsp;&nbsp;&nbsp;&nbsp;Once the computer graphics class was finished I continued development for an independent study.  In this second stage of development I updated the whole raytracer program to support animated objects.  I also added a new kind of object, a 3d wave object that is the composite of multiple sine waves.  The finale of the independent study was a render of a sunset feature that prominently featured this wave surface.  The final render is available [here]( https://youtu.be/bL9ruEOcmrc)
    
 ## Development for Computer Graphics class:
 
@@ -33,7 +33,7 @@
    * Write rgb triplets of the calculated color in ppm format
    * Save to output_image.ppm
  
- ## Additional Features that I added for the Computer Graphics class:
+ ### Additional features that I added on my own during the Computer Graphics class:
  * Oct-tree traversal 
    * Complex polygonal objects are meshes formed of hundreds if not thousands of triangle faces.  The naive algorithm checks a ray for intersection with every single triangle.
    * My improvement splits each mesh into a recursively reducing octtree bounding structure. Only the areas of the mesh that intersect the ray are checked decreaseing ray-triangle intersection from O(n) to O(log(n))
