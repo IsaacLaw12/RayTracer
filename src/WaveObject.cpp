@@ -100,10 +100,7 @@ Eigen::Vector3d WaveObject::find_surf_norm(Ray &ray, double t_value){
 
     Eigen::Vector3d dir_one = point_one - intersect_point;
     Eigen::Vector3d dir_two = point_two - intersect_point;
-    // TODO make sure the surface normal is pointing in the right direction
-    Eigen::Vector3d temp;
-    temp << 0, 1, 0;
-    //return temp;
+
     return -1 * (dir_one.cross(dir_two)).normalized();
 }
 
