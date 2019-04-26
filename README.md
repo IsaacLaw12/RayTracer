@@ -50,7 +50,7 @@
    * All rendered images are saved to ./tmp_renders
    * The starting frame and number of frames in the animation are specified in the driver file
    * For model and spheres objects the filename of an animation file can be added in the driver file to make it an animated object.
-   * For further details on the animated object format look at animation_spec.md
+   * For further details on the animated object format look at animation_file.md
  * Wave Object
    * Random sine waves are generated based off of specified number of waves and the random seed
    * The resulting sine waves are combined into a parameterized function that takes (x, y, z) coordinates and time and returns the amount of wave displacement along the surface normal.
