@@ -5,6 +5,7 @@ RenderImage::RenderImage(Scene* attached_scene){
 }
 
 void RenderImage::render_image(std::string save_image_file){
+    scene->reset_image();
     shoot_rays();
     scene->get_image().save_image(save_image_file);
 }
@@ -70,7 +71,7 @@ void RenderImage::calculate_color(Ray& ray, double t_value, SceneObject* hit_obj
     }
     color = hit_obj->get_ambient_color() * scene->get_ambient();
     double light_concentration, proximity_reflection;
-    intersect_pos = ray.get_point() + t_value * ray.get_dir();
+    intersect_pos = ray.get_ray_loc(t_value);
 
     for(Light light:scene->get_lights()){
         if (light.get_lighting_group() != hit_obj->get_lighting_group()){

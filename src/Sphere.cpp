@@ -13,7 +13,7 @@ Sphere::Sphere(std::string driver_line){
 
     std::stringstream read_sphere(driver_line);
     read_sphere >> driver_type >> x >> y >> z >> rad >> ka_red >> ka_blue >> ka_green >> kd_red >> kd_blue >> kd_green >>
-        ks_red >> ks_blue >> ks_green>> katt_red>> katt_blue>> katt_green >> ref_red >> ref_green >> ref_blue >> phong >> eta >> lighting_group;
+        ks_red >> ks_blue >> ks_green>> katt_red>> katt_blue>> katt_green >> ref_red >> ref_green >> ref_blue >> phong >> eta >> lighting_group >> animation_file;
 
     sphere_center << x, y, z;
     radius = rad;
@@ -41,6 +41,13 @@ Sphere::Sphere(std::string driver_line){
     refract_color(2, 2) = ref_blue;
 }
 
+void Sphere::add_to_center(Eigen::Vector3d change){
+    sphere_center = sphere_center + change;
+}
+
+void Sphere::add_to_radius(double change){
+    radius = radius + change;
+}
 
 double Sphere::intersect_ray(Ray& ray, Eigen::Vector3d &hit_normal){
     const Eigen::Vector3d &ray_pt = ray.get_point();
@@ -87,4 +94,20 @@ bool Sphere::ray_intersects(Ray& ray){
     } else{
         return false;
     }
+}
+
+bool Sphere::is_animated(){
+    return animation_file.size() > 0;
+}
+
+std::string Sphere::get_animation_file(){
+    return animation_file;
+}
+
+Eigen::Vector3d Sphere::get_center(){
+    return sphere_center;
+}
+
+double Sphere::get_radius(){
+    return radius;
 }

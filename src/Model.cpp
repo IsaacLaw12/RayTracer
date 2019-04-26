@@ -84,8 +84,7 @@ void Model::on_model_load(){
     map_vertices_faces();
     calculate_face_normals();
     int recursion_depth = 8;
-    std::cout << "Building octtree\n";
-    bounding_box = std::make_unique<BoundingBox>(Vertices, Faces, recursion_depth);
+    bounding_box = std::make_unique<OctTree>(Vertices, Faces, recursion_depth);
     calculate_vertex_normals();
 }
 
@@ -333,66 +332,6 @@ bool Model::test_intersection(Eigen::Vector3d &vertex_a, Eigen::Vector3d &vertex
     else {
         // This means that there is a line intersection but not a ray intersection.
         return false;
-    }
-
-}
-
-void Model::load_material(std::string material_file){
-    std::ifstream in(material_file);
-    std::cout << "LOADING MATERIAL: " << material_file << "\n";
-    if (!in){
-        std::cerr << "Could not open " << material_file << std::endl;
-        return;
-    }
-    std::string obj_line;
-    std::string line_type = "";
-
-    double k1, k2, k3;
-    while (std::getline(in, obj_line)){
-        std::stringstream obj_read(obj_line);
-        obj_read >> line_type;
-
-        if (line_type[0] == 'K' && line_type[1] == 'a'){
-            obj_read >> k1 >> k2 >> k3;
-            ambient_color(0, 0) = k1;
-            ambient_color(1, 1) = k2;
-            ambient_color(2, 2) = k3;
-        }
-
-        if (line_type[0] == 'K' && line_type[1] == 'd'){
-            obj_read >> k1 >> k2 >> k3;
-            diffuse_color(0, 0) = k1;
-            diffuse_color(1, 1) = k2;
-            diffuse_color(2, 2) = k3;
-        }
-
-        if (line_type[0] == 'K' && line_type[1] == 's'){
-            obj_read >> k1 >> k2 >> k3;
-            specular_color(0, 0) = k1;
-            specular_color(1, 1) = k2;
-            specular_color(2, 2) = k3;
-        }
-
-        if (line_type[0] == 'K' && line_type[1] == 'o'){
-            obj_read >> k1 >> k2 >> k3;
-            refract_color(0, 0) = k1;
-            refract_color(1, 1) = k2;
-            refract_color(2, 2) = k3;
-        }
-
-        if (line_type[0] == 'e'){
-            if (line_type[1] == 't'){
-                if (line_type[2] == 'a'){
-                    obj_read >> k1;
-                    eta = k1;
-                }
-            }
-        }
-
-        if (line_type[0] == 'N' && line_type[1] == 's'){
-            obj_read >> phong;
-        }
-
     }
 
 }
