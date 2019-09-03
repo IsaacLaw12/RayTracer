@@ -6,22 +6,44 @@ RenderImage::RenderImage(Scene* attached_scene){
 
 void RenderImage::render_image(std::string save_image_file){
     scene->reset_image();
-    shoot_rays();
+    image_tiles = tile_images(128);
+    render_tiles();
     scene->get_image().save_image(save_image_file);
 }
 
-void RenderImage::shoot_rays(){
+std::queue<image_tile> RenderImage::tile_images(int tile_size){
+  std::queue<image_tile> results;
+  int width = scene->get_camera().pixel_width;
+  int height = scene->get_camera().pixel_height;
+  for (int i=0; i<width; i+=tile_size){
+      for (int j=0; j<height; j+=tile_size){
+          struct image_tile ir;
+          ir.x = i;
+          ir.y = j;
+          ir.x_len = std::min(width-i, tile_size);
+          ir.y_len = std::min(height-j, tile_size);
+          results.push(ir);
+      }
+  }
+  return results;
+}
+
+void RenderImage::render_tiles(){
+    while (!image_tiles.empty()){
+        image_tile it = image_tiles.front();
+        image_tiles.pop();
+        render_tile(it);
+    }
+}
+
+void RenderImage::render_tile(image_tile img_t){
     Eigen::Vector3d ray_pt, ray_dir, color, ampl;
     Ray ray;
     double t_value = 0;
-    Camera& scene_camera = scene->get_camera();
-    for (int i=0; i<scene_camera.pixel_width; i++){
-        if (! (i%64)){
-            std::cout << "Row: " << i << " / " << scene_camera.pixel_width << "\n";
-        }
-        for (int j=0; j<scene_camera.pixel_height; j++){
-            ray_pt = scene_camera.get_pixel_position(i, j);
-            ray_dir = (ray_pt - scene_camera.get_eye()).normalized();
+    for (int i=img_t.x; i<img_t.x + img_t.x_len; i++){
+        for (int j=img_t.y; j<img_t.y + img_t.y_len; j++){
+            ray_pt = scene->get_camera().get_pixel_position(i, j);
+            ray_dir = (ray_pt - scene->get_camera().get_eye()).normalized();
             ray = Ray(ray_pt, ray_dir);
             color << 0,0,0;
             ampl << 1,1,1;
@@ -30,7 +52,6 @@ void RenderImage::shoot_rays(){
             scene->get_image().write_t_value(i, j, t_value);
         }
      }
-     std::cout << "end of ray tracing \n";
 }
 
 void RenderImage::ray_trace(Ray& ray, Eigen::Vector3d& accum, Eigen::Vector3d& ampl, int level, double &t_value){

@@ -31,6 +31,8 @@ Transformation::Transformation(std::string driver_string){
     driver >> asset_name;
     driver >> lighting_group;
     driver >> animation_file;
+    if (asset_name.length() == 0)
+        std::cout << "Invalid driver_string: " << driver_string << std::endl;
 }
 
 Transformation::Transformation(std::vector<double> transform_floats){
