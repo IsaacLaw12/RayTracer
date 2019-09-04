@@ -50,7 +50,15 @@ int main(int argc, char*argv[]){
         }
         std::string image_name = SAVE_FOLDER + save_image_file + padded_frame_num + ".ppm";
         RenderImage ri = RenderImage(&sc);
-        ri.render_image(image_name);
+
+        std::vector<std::thread> render_threads;
+        for (int i=0; i<4; i++)
+          render_threads.push_back(std::thread(&RenderImage::render_tiles, &ri));
+
+        for (std::thread & t : render_threads)
+          t.join();
+
+        ri.save_image(image_name);
     }
     return 0;
 }

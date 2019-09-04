@@ -2,12 +2,11 @@
 
 RenderImage::RenderImage(Scene* attached_scene){
     scene = attached_scene;
-}
-
-void RenderImage::render_image(std::string save_image_file){
     scene->reset_image();
     image_tiles = tile_images(128);
-    render_tiles();
+}
+
+void RenderImage::save_image(std::string save_image_file){
     scene->get_image().save_image(save_image_file);
 }
 
