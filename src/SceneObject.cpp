@@ -61,7 +61,6 @@ bool SceneObject::model_loaded(){
 
 void SceneObject::load_material(std::string material_file){
     std::ifstream in(material_file);
-    std::cout << "LOADING MATERIAL: " << material_file << "\n";
     if (!in){
         std::cerr << "Could not open material file " << material_file << std::endl;
         return;

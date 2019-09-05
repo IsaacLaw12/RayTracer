@@ -22,6 +22,7 @@ struct image_tile{
 class RenderImage {
   public:
         RenderImage(Scene* attached_scene);
+        void reset();
         void render_tiles();
         void save_image(std::string save_image_file);
   private:

@@ -2,6 +2,11 @@
 
 RenderImage::RenderImage(Scene* attached_scene){
     scene = attached_scene;
+    reset();
+}
+
+void RenderImage::reset(){
+    //  After each render this needs to be called before the next render
     scene->reset_image();
     image_tiles = tile_images(128);
 }

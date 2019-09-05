@@ -44,9 +44,9 @@ void Scene::reset_image(){
 }
 
 bool Scene::advance_frame(){
-    std::cout << "current: " << current_frame << " out of: " << number_frames << "\n";
     // Call to make the necessary changes to the scene before rendering the next frame
     if (has_next_frame()){
+        std::cout << "current frame: " << current_frame << " out of: " << number_frames << "\n";
         render_objects.clear();
         for (auto ao:animated_objects){
             ao->advance_frame();
@@ -57,9 +57,8 @@ bool Scene::advance_frame(){
         }
         current_frame++;
         return true;
-    } else{
-        return false;
     }
+    return false;
 }
 
 bool Scene::has_next_frame(){
@@ -149,9 +148,9 @@ void Scene::edit_camera(std::string driver_line){
         d_line >> d1 >> d2 >> d3;
         destination_image.set_focus_blur(d1, d2, d3);
     }else if(!driver_line.compare(0, anti_alias.size(), anti_alias)){
-          d_line >> d1;
-          scene_camera.set_anti_alias(d1);
-          destination_image.set_anti_alias(d1);
+        d_line >> d1;
+        scene_camera.set_anti_alias(d1);
+        destination_image.set_anti_alias(d1);
     }else if(!driver_line.compare(0, recursion.size(), recursion)){
         d_line >> recursion_level;
     }else if(!driver_line.compare(0, frames.size(), frames)) {

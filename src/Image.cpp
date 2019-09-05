@@ -67,7 +67,6 @@ void Image::save_image(std::string file_name){
     }
 
     output << "P3" << "\n";
-    std::cout << "Image_wid: " << orig_width << "\n";
     output << orig_width << " " << orig_height << " 255" << "\n";
     int red, green, blue;
     for (int i=orig_height-1;i>=0; i--){
