@@ -7,7 +7,11 @@ void create_directory(std::string save_folder){
     // Clear the saved render folder of previous contents
     char remove_command[80] = "rm -r ";
     strcat(remove_command, save_folder.c_str());
-    system(remove_command);
+    if (0 == system(remove_command)){
+        // The result of this command does not need to be handled as the following system command
+        //   properly alerts to the same potential problem set.
+        ;
+    }
 
     char create_command[80] = "mkdir ";
     strcat(create_command, save_folder.c_str());
