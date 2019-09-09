@@ -1,8 +1,9 @@
 #ifndef RENDERIMAGE_INCLUDED
 #define RENDERIMAGE_INCLUDED
 #include <queue>
-#include<thread>
-#include<vector>
+#include <thread>
+#include <vector>
+#include <mutex>
 
 #include "Scene.h"
 
@@ -29,7 +30,9 @@ class RenderImage {
         Scene* scene;
         double MISSED_T_VALUE = 1000000000;
         std::queue<image_tile> image_tiles;
+        std::mutex image_tiles_mutex;
 
+        image_tile build_image_tile(int x, int y, int x_len, int y_len);
         std::queue<image_tile> tile_images(int window_size);
         void render_tile(image_tile img_t);
         void ray_trace(Ray& ray, Eigen::Vector3d& accum, Eigen::Vector3d& ampl, int level, double &t_value);

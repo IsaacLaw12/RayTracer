@@ -15,17 +15,24 @@ void RenderImage::save_image(std::string save_image_file){
     scene->get_image().save_image(save_image_file);
 }
 
+image_tile RenderImage::build_image_tile(int x, int y, int x_len, int y_len){
+    image_tile result;
+    result.x = x;
+    result.y = y;
+    result.x_len = x_len;
+    result.y_len = y_len;
+    return result;
+}
+
 std::queue<image_tile> RenderImage::tile_images(int tile_size){
   std::queue<image_tile> results;
   int width = scene->get_camera().pixel_width;
   int height = scene->get_camera().pixel_height;
   for (int i=0; i<width; i+=tile_size){
       for (int j=0; j<height; j+=tile_size){
-          struct image_tile ir;
-          ir.x = i;
-          ir.y = j;
-          ir.x_len = std::min(width-i, tile_size);
-          ir.y_len = std::min(height-j, tile_size);
+          int x_len = std::min(width-i, tile_size);
+          int y_len = std::min(height-j, tile_size);
+          image_tile ir = build_image_tile(i, j, x_len, y_len);
           results.push(ir);
       }
   }
@@ -33,10 +40,21 @@ std::queue<image_tile> RenderImage::tile_images(int tile_size){
 }
 
 void RenderImage::render_tiles(){
-    while (!image_tiles.empty()){
-        image_tile it = image_tiles.front();
-        image_tiles.pop();
-        render_tile(it);
+    // Might be called by multiple threads, so image_tiles needs to be populated
+    //   before this function is used
+    bool queue_empty = false;
+    while (!queue_empty){
+        image_tiles_mutex.lock();
+        image_tile current_tile = build_image_tile(0,0,0,0);
+        if (!image_tiles.empty()){
+            current_tile = image_tiles.front();
+            image_tiles.pop();
+        } else{
+            queue_empty = true;
+        }
+        image_tiles_mutex.unlock();
+        // If the queue was empty, current_tile covers no area and will not cause any rendering
+        render_tile(current_tile);
     }
 }
 
