@@ -7,7 +7,8 @@
 * To run:
   * Clone the repository and type 'make' in the Raytracer directory
   * Copy all of the files from one of the Scene folders into the same directory
-  * Run with ./raytracer &nbsp;driver_file.txt &nbsp;output_image.ppm
+  * Run with ./raytracer &nbsp;driver_file.txt &nbsp;output_directory
+  *    Optionally use -t or --threads to specify number of threads
   * Consult scene_driver.md for details on how the scene driver works
 
 
