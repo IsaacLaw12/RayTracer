@@ -99,15 +99,15 @@ SceneObject* AnimatedObject::get_object(){
 void AnimatedObject::advance_frame(){
     // Load the next model in the directory if there are any left
     if (has_next_frame()){
-          frame_setting this_transform = frame_steps[current_frame];
-          Transformation frame_transform(this_transform.transform_floats);
-          delete current_obj;
-          current_obj = new Model(*original_obj);
-          frame_transform.transform_object(current_obj);
-          if (this_transform.set_as_new_base_model){
-              delete original_obj;
-              original_obj = new Model(*current_obj);
-          }
+        frame_setting this_transform = frame_steps[current_frame];
+        Transformation frame_transform(this_transform.transform_floats);
+        delete current_obj;
+        current_obj = new Model(*original_obj);
+        frame_transform.transform_object(current_obj);
+        if (this_transform.set_as_new_base_model){
+            delete original_obj;
+            original_obj = new Model(*current_obj);
+        }
 
         current_frame++;
     }

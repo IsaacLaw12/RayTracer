@@ -32,7 +32,7 @@ Model::Model(){}
 void Model::load_model(){
     std::ifstream in(original_file);
     if (!in){
-        std::cerr << "Could not open " << original_file << std::endl;
+        std::cerr << "Could not open model file " << original_file << std::endl;
         load_successful = false;
         return;
     }

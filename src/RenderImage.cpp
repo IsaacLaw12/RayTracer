@@ -2,26 +2,70 @@
 
 RenderImage::RenderImage(Scene* attached_scene){
     scene = attached_scene;
+    reset();
 }
 
-void RenderImage::render_image(std::string save_image_file){
+void RenderImage::reset(){
+    //  After each render this needs to be called before the next render
     scene->reset_image();
-    shoot_rays();
+    image_tiles = tile_images(128);
+}
+
+void RenderImage::save_image(std::string save_image_file){
     scene->get_image().save_image(save_image_file);
 }
 
-void RenderImage::shoot_rays(){
+image_tile RenderImage::build_image_tile(int x, int y, int x_len, int y_len){
+    image_tile result;
+    result.x = x;
+    result.y = y;
+    result.x_len = x_len;
+    result.y_len = y_len;
+    return result;
+}
+
+std::queue<image_tile> RenderImage::tile_images(int tile_size){
+  std::queue<image_tile> results;
+  int width = scene->get_camera().pixel_width;
+  int height = scene->get_camera().pixel_height;
+  for (int i=0; i<width; i+=tile_size){
+      for (int j=0; j<height; j+=tile_size){
+          int x_len = std::min(width-i, tile_size);
+          int y_len = std::min(height-j, tile_size);
+          image_tile ir = build_image_tile(i, j, x_len, y_len);
+          results.push(ir);
+      }
+  }
+  return results;
+}
+
+void RenderImage::render_tiles(){
+    // Might be called by multiple threads, so image_tiles needs to be populated
+    //   before this function is used
+    bool queue_empty = false;
+    while (!queue_empty){
+        image_tiles_mutex.lock();
+        image_tile current_tile = build_image_tile(0,0,0,0);
+        if (!image_tiles.empty()){
+            current_tile = image_tiles.front();
+            image_tiles.pop();
+        } else{
+            queue_empty = true;
+        }
+        image_tiles_mutex.unlock();
+        // If the queue was empty, current_tile covers no area and will not cause any rendering
+        render_tile(current_tile);
+    }
+}
+
+void RenderImage::render_tile(image_tile img_t){
     Eigen::Vector3d ray_pt, ray_dir, color, ampl;
     Ray ray;
     double t_value = 0;
-    Camera& scene_camera = scene->get_camera();
-    for (int i=0; i<scene_camera.pixel_width; i++){
-        if (! (i%64)){
-            std::cout << "Row: " << i << " / " << scene_camera.pixel_width << "\n";
-        }
-        for (int j=0; j<scene_camera.pixel_height; j++){
-            ray_pt = scene_camera.get_pixel_position(i, j);
-            ray_dir = (ray_pt - scene_camera.get_eye()).normalized();
+    for (int i=img_t.x; i<img_t.x + img_t.x_len; i++){
+        for (int j=img_t.y; j<img_t.y + img_t.y_len; j++){
+            ray_pt = scene->get_camera().get_pixel_position(i, j);
+            ray_dir = (ray_pt - scene->get_camera().get_eye()).normalized();
             ray = Ray(ray_pt, ray_dir);
             color << 0,0,0;
             ampl << 1,1,1;
@@ -30,7 +74,6 @@ void RenderImage::shoot_rays(){
             scene->get_image().write_t_value(i, j, t_value);
         }
      }
-     std::cout << "end of ray tracing \n";
 }
 
 void RenderImage::ray_trace(Ray& ray, Eigen::Vector3d& accum, Eigen::Vector3d& ampl, int level, double &t_value){
